@@ -200,6 +200,9 @@ begin_execute_command:
     cmp OPC_REG8, 16
     jae execute_command_16_to_18
 
+    ;# 10-15? Go to loop_command
+    jmp loop_command
+
 execute_command_2_to_9:
     ;# Add 6. We're going to subtract (2+6) after this, so we effectively subtract 2.
     add OPC_REG8, 6
