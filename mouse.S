@@ -201,9 +201,8 @@ begin_execute_command:
     jae execute_command_16_to_18
 
 execute_command_2_to_9:
-    ;# Subtract 2, since the first opcode is 2
-    sub OPC_REG8, 2
-    jmp execute_command
+    ;# Add 6. We're going to subtract (2+6) after this, so we effectively subtract 2.
+    add OPC_REG8, 6
 
 execute_command_16_to_18:
     ;# Subtract 2+6, since the first opcode is 16 and we want the 16th opcode to be the 8th
