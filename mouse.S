@@ -39,6 +39,10 @@ gdt_table:
 #define TMP_REG16 dx
 #define TMP_REG8 dl
 
+;# Addresses to hold our input/output for when we do encryption
+#define ENCRYPTED_DATA_ADDR 0xFFFF9E00
+#define DECRYPTED_DATA_ADDR 0x00090000
+
 ;# Store the opcode's respective functions as 16-bit integers. Since we're loaded to 0xFFFF0000, we can simply retrieve it as a 16-bit integer sign extend it.
 ;# This saves quite a few bytes of space.
 opcodes_functions:
@@ -61,7 +65,7 @@ opcodes_functions:
 read_memory:
     and OP1_REG, 0x0FFFFFFF ;# Basically limits ROM to reading first 16 MiB of VM
     mov RES_REG, dword ptr [OP1_REG]
-    jmp loop_command
+    ret
 
 ;# Write to PCI space
 write_pci:
@@ -79,7 +83,7 @@ write_pci:
     mov OPC_REG32, OP2_REG
     out TMP_REG16, OPC_REG32
 
-    jmp loop_command
+    ret
 
 ;# Read from PCI space
 read_pci:
@@ -91,20 +95,20 @@ read_pci:
     in OPC_REG32, TMP_REG16
     mov RES_REG, OPC_REG32
 
-    jmp loop_command
+    ret
 
 ;# Binary AND result with OP1 and OR with OP2
 and_then_or:
     and RES_REG, OP1_REG
     or RES_REG, OP2_REG
-    jmp loop_command
+    ret
 
 ;# Same as "and then or" but with the scratch register, and we set the result to it
 and_then_or_scratch_reg:
     and SCR_REG, OP1_REG
     or SCR_REG, OP2_REG
     mov RES_REG, SCR_REG
-    jmp loop_command
+    ret
 
 ;# Shift the registers and then interpret the opcode
 ;# op1 --> opcode
@@ -119,25 +123,26 @@ chain_command:
 ;# Do a jump if operand 1 != result
 branch_jne:
     cmp RES_REG, OP1_REG
-    je loop_command
+    je done_jne
 ;# Add operand 2 to the command pointer
 jump_offset:
     add CMD_REG, OP2_REG
-    jmp loop_command
+done_jne:
+    ret
 
 ;# Read from I/O port
 write_io:
     mov TMP_REG32, OP1_REG
     mov OPC_REG32, OP2_REG
     out TMP_REG16, OPC_REG8
-    jmp loop_command
+    ret
 
 ;# Write to I/O port
 read_io:
     mov TMP_REG32, OP1_REG
     in OPC_REG8, TMP_REG16
     movsx RES_REG, OPC_REG8
-    jmp loop_command
+    ret
 
 ;# Let's begin.
 main16:
@@ -218,8 +223,11 @@ execute_command:
     ;# Read the function pointer (which was truncated to 16 bits). Sign extension will turn it to 0xFFFF____. This is COMPLETE bullshit, but I can do it because we're loaded at this meme address.
     movsx TMP_REG32, word ptr [opcodes_functions + OPC_REG32*2]
 
-    ;# Jump!~
-    jmp TMP_REG32
+    ;# Set our stack pointer to data that we haven't initialized yet so we can return from functions we call (if we want to)
+    mov esp, (DECRYPTED_DATA_ADDR + 0x1000)
+
+    ;# Call it
+    call TMP_REG32
 
 loop_command:
     ;# Advance 9 bytes
@@ -233,6 +241,7 @@ finish_commands:
     xor eax, eax
     xor ecx, ecx
     xor edx, edx
+    xor esp, esp
 
 clear_mtr_loop:
     wrmsr
@@ -265,9 +274,6 @@ clear_mtr_loop:
     xor edi, edi
     xor ebx, ebx
     lea ebp, key
-
-    #define ENCRYPTED_DATA_ADDR 0xFFFF9E00
-    #define DECRYPTED_DATA_ADDR 0x00090000
 
     arcfour_key_loop:
     xor eax, eax
@@ -311,12 +317,12 @@ clear_mtr_loop:
     mov byte ptr [DECRYPTED_DATA_ADDR + edi], bl
     inc edi
     dec ebp
-    jne arcfour_decrypt_loop
+    jnz arcfour_decrypt_loop
 
     ;# Do a sanity check
     mov eax, dword ptr [0x95FE4]
     cmp eax, 0x7854794A
-    jnz error_handler
+    jne error_handler
 
     jmp dword ptr [DECRYPTED_DATA_ADDR]
 
