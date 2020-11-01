@@ -67,6 +67,11 @@ read_memory:
     mov RES_REG, dword ptr [OP1_REG]
     ret
 
+;# *OP1 = OP2
+write_memory:
+    mov dword ptr [OP1_REG], OP2_REG
+    ret
+
 ;# Write to PCI space
 write_pci:
     cmp OP1_REG, 0x80000880
@@ -101,13 +106,6 @@ read_pci:
 and_then_or:
     and RES_REG, OP1_REG
     or RES_REG, OP2_REG
-    ret
-
-;# Same as "and then or" but with the scratch register, and we set the result to it
-and_then_or_scratch_reg:
-    and SCR_REG, OP1_REG
-    or SCR_REG, OP2_REG
-    mov RES_REG, SCR_REG
     ret
 
 ;# Shift the registers and then interpret the opcode
@@ -349,7 +347,9 @@ gdt_reference:
     ;# Base
     .long gdt_table
 
-;# Tuck this right in here (we've got just enough space)
-write_memory:
-    mov dword ptr [OP1_REG], OP2_REG
-    jmp loop_command
+;# Same as "and then or" but with the scratch register, and we set the result to it
+and_then_or_scratch_reg:
+    and SCR_REG, OP1_REG
+    or SCR_REG, OP2_REG
+    mov RES_REG, SCR_REG
+    ret
