@@ -243,11 +243,13 @@ clear_mtr_loop:
     mov eax, cr0
     and eax, 0x9FFFFFFF
     mov cr0, eax
+    
+    # Hold this value here
+    mov esi, 0x8F000
 
     # ARCFOUR KSA
     xor eax, eax
-    xor ecx, ecx
-    mov esi, 0x8F000
+    xor ecx, ecx # set to 0 (we're going to let this underflow until we hit 0 again)
     mov edx, esi
     arcfour_key_schedule_loop:
     mov byte ptr [edx], al
