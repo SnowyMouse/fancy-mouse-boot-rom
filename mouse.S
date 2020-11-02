@@ -265,7 +265,7 @@ clear_mtr_loop:
     mov ebp, OFFSET key
 
     arcfour_key_loop:
-    mov al, byte ptr [ebp + ecx]
+    mov al, byte ptr [ecx + ebp]
     mov dl, byte ptr [edi + esi]
     add bl, al
     add bl, dl
