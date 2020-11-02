@@ -7,13 +7,9 @@
 ;# Main code (0xFFFFFE00)
 .text
 
-;# Decryption key
-key:
-    .byte 0x27, 0x45, 0xA9, 0x10, 0x39, 0x7E, 0x6A, 0xA6, 0x86, 0xFB, 0x4B, 0x1A, 0x4B, 0xA9, 0x0F, 0xD2
+text_start:
 
-;# Global descriptor table
-gdt_table:
-    .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x9B, 0xCF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x93, 0xCF, 0x00
+#define TEXT_START_ADDR 0xFFFFFE00
 
 ;# Operand 1 register
 #define OP1_REG edi
@@ -42,23 +38,6 @@ gdt_table:
 ;# Addresses to hold our input/output for when we do encryption
 #define ENCRYPTED_DATA_ADDR 0xFFFF9E00
 #define DECRYPTED_DATA_ADDR 0x00090000
-
-;# Store the opcode's respective functions as 16-bit integers. Since we're loaded to 0xFFFF0000, we can simply retrieve it as a 16-bit integer sign extend it.
-;# This saves quite a few bytes of space.
-opcodes_functions:
-    ;# 2-9
-    .short read_memory
-    .short write_memory
-    .short write_pci
-    .short read_pci
-    .short and_then_or
-    .short chain_command
-    .short branch_jne
-    .short jump_offset
-    ;# 16-18
-    .short and_then_or_scratch_reg
-    .short write_io
-    .short read_io
 
 ;# Result = *OP1 & 0x0FFFFFFF
 ;# I could forego doing the binary AND and save a few bytes, but it wouldn't functionally be the same
@@ -142,6 +121,13 @@ read_io:
     movsx RES_REG, OPC_REG8
     ret
 
+;# Same as "and then or" but with the scratch register, and we set the result to it
+and_then_or_scratch_reg:
+    and SCR_REG, OP1_REG
+    or SCR_REG, OP2_REG
+    mov RES_REG, SCR_REG
+    ret
+
 ;# Let's begin.
 main16:
     ;# First set up the GDT/IDT (this is 16-bit x86, so the bytecode has to be written out)
@@ -218,8 +204,9 @@ execute_command:
     ;# Convert the 8-bit opcode to a 32-bit one
     movsx OPC_REG32, OPC_REG8
 
-    ;# Read the function pointer (which was truncated to 16 bits). Sign extension will turn it to 0xFFFF____. This is COMPLETE bullshit, but I can do it because we're loaded at this meme address.
-    movsx TMP_REG32, word ptr [opcodes_functions + OPC_REG32*2]
+    ;# Get the function pointer as an offset from 0xFFFFFE00.
+    mov TMP_REG32, TEXT_START_ADDR
+    mov TMP_REG8, byte ptr [opcodes_functions + OPC_REG32]
 
     ;# Set our stack pointer to data that we haven't initialized yet so we can return from functions we call (if we want to)
     mov esp, (DECRYPTED_DATA_ADDR + 0x1000)
@@ -323,10 +310,21 @@ clear_mtr_loop:
 
     jmp dword ptr [DECRYPTED_DATA_ADDR]
 
-;# Error handling trap (failed sanity check - exception)
-error_handler:
-    int 3
-    jmp error_handler
+;# Decryption key
+key:
+    .byte 0x27, 0x45, 0xA9, 0x10, 0x39, 0x7E, 0x6A, 0xA6, 0x86, 0xFB, 0x4B, 0x1A, 0x4B, 0xA9, 0x0F, 0xD2
+
+;# Global descriptor table
+gdt_table:
+    .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x9B, 0xCF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x93, 0xCF, 0x00
+
+;# Global descriptor reference
+gdt_reference:
+    ;# Limit
+    .short 0x0018
+
+    ;# Base
+    .long gdt_table
 
 ;# Reset vector (0xFFFFFFF0)
 ;# This is where execution starts. We have exactly 16 bytes to work with this section.
@@ -338,17 +336,23 @@ entry_point:
     .byte 0xE9
     .word (main16-(0xFFF0+3))
 
-;# Global descriptor reference
-gdt_reference:
-    ;# Limit
-    .short 0x0018
 
-    ;# Base
-    .long gdt_table
+;# Store the opcode's respective functions as 8-bit offsets from text_start, which is 0xFFFFFE00
+opcodes_functions:
+    ;# 2-9
+    .byte (read_memory - text_start)
+    .byte (write_memory - text_start)
+    .byte (write_pci - text_start)
+    .byte (read_pci - text_start)
+    .byte (and_then_or - text_start)
+    .byte (chain_command - text_start)
+    .byte (branch_jne - text_start)
+    .byte (jump_offset - text_start)
+    ;# 16-18
+    .byte (and_then_or_scratch_reg - text_start)
+    .byte (write_io - text_start)
+    .byte (read_io - text_start)
 
-;# Same as "and then or" but with the scratch register, and we set the result to it
-and_then_or_scratch_reg:
-    and SCR_REG, OP1_REG
-    or SCR_REG, OP2_REG
-    mov RES_REG, SCR_REG
-    ret
+;# Error handling trap (failed sanity check - exception)
+error_handler:
+    jmp error_handler
