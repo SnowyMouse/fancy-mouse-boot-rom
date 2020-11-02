@@ -259,7 +259,6 @@ clear_mtr_loop:
     jnz arcfour_key_schedule_loop
 
     # Load our key
-    xor ecx, ecx
     xor edi, edi
     xor ebx, ebx
     mov ebp, OFFSET key
