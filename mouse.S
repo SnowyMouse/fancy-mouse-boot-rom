@@ -227,7 +227,6 @@ finish_commands:
     xor eax, eax
     xor ecx, ecx
     xor edx, edx
-    xor esp, esp
 
 clear_mtr_loop:
     wrmsr
