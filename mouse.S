@@ -318,8 +318,7 @@ clear_mtr_loop:
     jnz arcfour_decrypt_loop
 
     ;# Do a sanity check
-    mov eax, dword ptr [0x95FE4]
-    cmp eax, 0x7854794A
+    cmp dword ptr [0x95FE4], 0x7854794A
     jne error_handler
 
     jmp dword ptr [DECRYPTED_DATA_ADDR]
