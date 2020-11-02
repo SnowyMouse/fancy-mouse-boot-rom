@@ -44,12 +44,12 @@ text_start:
 read_memory:
     and OP1_REG, 0x0FFFFFFF # Basically limits ROM to reading first 16 MiB of VM
     mov RES_REG, dword ptr [OP1_REG]
-    ret
+    jmp go_back_to_loop_command
 
 # *OP1 = OP2
 write_memory:
     mov dword ptr [OP1_REG], OP2_REG
-    ret
+    jmp go_back_to_loop_command
 
 # Write to PCI space
 write_pci:
@@ -67,7 +67,7 @@ write_pci:
     mov OPC_REG32, OP2_REG
     out TMP_REG16, OPC_REG32
 
-    ret
+    jmp go_back_to_loop_command
 
 # Read from PCI space
 read_pci:
@@ -79,13 +79,14 @@ read_pci:
     in OPC_REG32, TMP_REG16
     mov RES_REG, OPC_REG32
 
-    ret
+go_back_to_loop_command:
+    jmp loop_command
 
 # Binary AND result with OP1 and OR with OP2
 and_then_or:
     and RES_REG, OP1_REG
     or RES_REG, OP2_REG
-    ret
+    jmp loop_command
 
 # Shift the registers and then interpret the opcode
 # op1 --> opcode
@@ -105,28 +106,28 @@ branch_jne:
 jump_offset:
     add CMD_REG, OP2_REG
 done_jne:
-    ret
+    jmp loop_command
 
 # Read from I/O port
 write_io:
     mov TMP_REG32, OP1_REG
     mov OPC_REG32, OP2_REG
     out TMP_REG16, OPC_REG8
-    ret
+    jmp loop_command
 
 # Write to I/O port
 read_io:
     mov TMP_REG32, OP1_REG
     in OPC_REG8, TMP_REG16
     movsx RES_REG, OPC_REG8
-    ret
+    jmp loop_command
 
 # Same as "and then or" but with the scratch register, and we set the result to it
 and_then_or_scratch_reg:
     and SCR_REG, OP1_REG
     or SCR_REG, OP2_REG
     mov RES_REG, SCR_REG
-    ret
+    jmp loop_command
 
 # Let's begin.
 main16:
@@ -196,9 +197,6 @@ execute_command:
     # Get the function pointer as an offset from 0xFFFFFE00.
     mov TMP_REG32, TEXT_START_ADDR
     mov TMP_REG8, byte ptr [opcodes_functions + OPC_REG32]
-
-    # Set our stack pointer to data that we haven't initialized yet so we can return from functions we call (if we want to)
-    mov esp, (DECRYPTED_DATA_ADDR + 0x1000)
     
     # First operand
     mov OP1_REG, dword ptr [CMD_REG + 1]
@@ -207,7 +205,7 @@ execute_command:
     mov OP2_REG, dword ptr [CMD_REG + 5]
 
     # Call it
-    call TMP_REG32
+    jmp TMP_REG32
 
 loop_command:
     # Advance 9 bytes
