@@ -281,7 +281,6 @@ clear_mtr_loop:
     xor ecx, ecx
     xor edx, edx
     xor edi, edi
-    xor eax, eax
     mov ebp, 0x6000
 
     # Now actually decrypt
