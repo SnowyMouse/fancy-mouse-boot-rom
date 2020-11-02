@@ -246,7 +246,7 @@ clear_mtr_loop:
 
     # ARCFOUR KSA
     xor eax, eax
-    mov cx, 0x100
+    xor ecx, ecx
     mov esi, 0x8F000
     mov edx, esi
     arcfour_key_schedule_loop:
