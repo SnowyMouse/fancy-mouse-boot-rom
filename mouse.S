@@ -243,14 +243,14 @@ clear_mtr_loop:
     mov cr0, eax
 
     # ARCFOUR KSA
-    mov eax, 0x3020100
-    mov cl, 0x40
+    xor eax, eax
+    mov cx, 0x100
     mov esi, 0x8F000
     mov edx, esi
     arcfour_key_schedule_loop:
-    mov dword ptr [edx], eax
-    add edx, 0x4
-    add eax, 0x4040404
+    mov byte ptr [edx], al
+    inc al
+    inc edx
     dec cl
     jnz arcfour_key_schedule_loop
 
