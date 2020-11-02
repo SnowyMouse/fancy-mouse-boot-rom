@@ -174,13 +174,9 @@ begin_execute_command:
     cmp OPC_REG8, 18
     ja loop_command
 
-    # Less than 2? Go to loop_command
-    cmp OPC_REG8, 2
-    jb loop_command
-
-    # 2-9? Go to the thing
+    # 0-9? Go to the thing
     cmp OPC_REG8, 9
-    jbe execute_command_2_to_9
+    jbe execute_command
 
     # 16-18? Go to the thing
     cmp OPC_REG8, 16
@@ -189,13 +185,9 @@ begin_execute_command:
     # 10-15? Go to loop_command
     jmp loop_command
 
-execute_command_2_to_9:
-    # Add 6. We're going to subtract (2+6) after this, so we effectively subtract 2.
-    add OPC_REG8, 6
-
 execute_command_16_to_18:
-    # Subtract 2+6, since the first opcode is 16 and we want the 16th opcode to be the 8th
-    sub OPC_REG8, (2+6)
+    # Subtract 6, since the first opcode is 16 and we want the 16th opcode to be the 10th index
+    sub OPC_REG8, 6
 
 execute_command:
     # Convert the 8-bit opcode to a 32-bit one
@@ -323,6 +315,10 @@ gdt_reference:
     # Base
     .long gdt_table
 
+# Error handling trap (failed sanity check - exception)
+error_handler:
+    jmp error_handler
+
 # Reset vector (0xFFFFFFF0)
 # This is where execution starts. We have exactly 16 bytes to work with this section.
 .section .reset_vector
@@ -336,6 +332,10 @@ entry_point:
 
 # Store the opcode's respective functions as 8-bit offsets from text_start, which is 0xFFFFFE00
 opcodes_functions:
+    # 0-1
+    .byte (loop_command - text_start)
+    .byte (loop_command - text_start)
+    
     # 2-9
     .byte (read_memory - text_start)
     .byte (write_memory - text_start)
@@ -349,7 +349,3 @@ opcodes_functions:
     .byte (and_then_or_scratch_reg - text_start)
     .byte (write_io - text_start)
     .byte (read_io - text_start)
-
-# Error handling trap (failed sanity check - exception)
-error_handler:
-    jmp error_handler
