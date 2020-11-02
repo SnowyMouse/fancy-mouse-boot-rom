@@ -261,8 +261,6 @@ clear_mtr_loop:
     lea ebp, key
 
     arcfour_key_loop:
-    xor eax, eax
-    xor edx, edx
     mov al, byte ptr [ebp + ecx]
     mov dl, byte ptr [edi + esi]
     add bl, al
