@@ -130,12 +130,13 @@ and_then_or_scratch_reg:
 
 ;# Let's begin.
 main16:
-    ;# First set up the GDT/IDT (this is 16-bit x86, so the bytecode has to be written out)
+    ;# First set up the GDT (this is 16-bit x86, so the bytecode has to be written out)
     .byte 0x66, 0x2E, 0x0F, 0x01, 0x16
     .short gdt_reference
 
-    .byte 0x66, 0x2E, 0x0F, 0x01, 0x1E
-    .short gdt_reference
+    ;# There is code to set up the IDT, too, but it's not a valid IDT, so... uh... we don't need to do it
+    ;# .byte 0x66, 0x2E, 0x0F, 0x01, 0x1E
+    ;# .short gdt_reference
 
     ;# Enable protected mode
     .byte 0x0F, 0x20, 0xC0
@@ -271,8 +272,8 @@ clear_mtr_loop:
     inc edi
     mov al, byte ptr [ebx + esi]
     mov byte ptr [edi + esi - 0x1], al
-    cmp ecx, 0x10
     mov byte ptr [ebx + esi], dl
+    cmp ecx, 0x10
     jne arcfour_key_loop_cmp
     xor ecx, ecx
     arcfour_key_loop_cmp:
