@@ -266,12 +266,12 @@ clear_mtr_loop:
     mov al, byte ptr [ebp + ecx]
     mov dl, byte ptr [edi + esi]
     add bl, al
-    inc ecx
     add bl, dl
-    inc edi
     mov al, byte ptr [ebx + esi]
-    mov byte ptr [edi + esi - 0x1], al
+    mov byte ptr [edi + esi], al
+    inc edi
     mov byte ptr [ebx + esi], dl
+    inc ecx
     cmp ecx, 0x10
     jne arcfour_key_loop_cmp
     xor ecx, ecx
