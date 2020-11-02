@@ -270,9 +270,7 @@ clear_mtr_loop:
     inc edi
     mov byte ptr [ebx + esi], dl
     inc ecx
-    cmp ecx, 0x10
-    jne arcfour_key_loop_cmp
-    xor ecx, ecx
+    and ecx, 0xF
     arcfour_key_loop_cmp:
     cmp edi, 0x100
     jc arcfour_key_loop
