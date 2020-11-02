@@ -164,16 +164,12 @@ main32:
 read_next_command:
     # Read the opcode
     mov OPC_REG8, byte ptr [CMD_REG]
-    # First operand
-    mov OP1_REG, dword ptr [CMD_REG + 1]
-    # Second operand
-    mov OP2_REG, dword ptr [CMD_REG + 5]
-
-begin_execute_command:
+    
     # Are we done?
     cmp OPC_REG8, 0xEE
     je finish_commands
 
+begin_execute_command:
     # Greater than 18? Go to loop_command
     cmp OPC_REG8, 18
     ja loop_command
@@ -211,6 +207,12 @@ execute_command:
 
     # Set our stack pointer to data that we haven't initialized yet so we can return from functions we call (if we want to)
     mov esp, (DECRYPTED_DATA_ADDR + 0x1000)
+    
+    # First operand
+    mov OP1_REG, dword ptr [CMD_REG + 1]
+    
+    # Second operand
+    mov OP2_REG, dword ptr [CMD_REG + 5]
 
     # Call it
     call TMP_REG32
