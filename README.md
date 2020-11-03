@@ -1,8 +1,8 @@
 # Fancy Mouse Boot ROM
 
-This boot rom can load a 1.0 Xbox BIOS. It contains absolutely no code
-copyrighted by Microsoft, so you are free to distribute it. See LICENSE.txt for
-more information.
+This boot rom can load an Xbox BIOS. It contains absolutely no code copyrighted
+by Microsoft, so you are free to distribute it. See LICENSE.txt for more
+information.
 
 ## What does it do?
 
@@ -12,9 +12,17 @@ This boot ROM accomplishes the following:
 - Enables protected mode
 - Enables 32-bit mode (since x86 starts in a backwards-compatible 16-bit mode)
 - Loads and interprets opcodes to initialize the console
-- Decodes and runs the console's second-stage bootloader
+- Decodes and passes off to the Xbox's second-stage bootloader (<4817 kernels)
+- Verifies and passes off to the BIOS (4817 or newer kernels)
 
 It does so with plenty of bytes to spare despite the 512 byte limitation!
+
+## Which file do I use?
+
+The version you use depends on the BIOS kernel:
+
+- If you are using a kernel revision prior to 4817, use mouse_rev0.bin
+- If you are using kernel revision 4817 or later, use mouse_rev1.bin
 
 ## How do I compile this?
 
@@ -47,13 +55,12 @@ The resulting file will be called mouse.bin in the bin folder.
 We aren't an expert on law. However, there are a few things to note:
 
 - None of the code in here is copyrighted by Microsoft. The opcode interpreter
-  is written entirely from scratch, and the ARCFOUR algorithm implementation is
-  not the same, not that it would have mattered in a legal sense since
-  Microsoft does not own the algorithm and thus cannot copyright it.
+  is written entirely from scratch. The ARCFOUR and TEA algorithms are not owned
+  by Microsoft, thus they cannot copyright them.
 
 - We have not agreed to any contractual agreement that states we cannot do this,
   and you probably have not agreed to any contractual agreement that states you
-  cannot use this. So go ahead and use this.
+  cannot use this.
 
 ## Credits
 
@@ -67,6 +74,8 @@ We aren't an expert on law. However, there are a few things to note:
   what I can actually do.
 
 - The [Xemu] project: Extremely helpful so I can debug this with GDB.
+
+- The [Xbox Dev Wiki]: Helpful for knowing what the rev1 MCPX does.
 
 [Deconstructing the Xbox Boot ROM]: https://mborgerson.com/deconstructing-the-xbox-boot-rom/
 [Xemu]: https://xemu.app/

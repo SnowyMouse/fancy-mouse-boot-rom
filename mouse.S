@@ -229,13 +229,22 @@ clear_mtr_loop:
     mov eax, ebx
     wrmsr
 
+enable_caching:
     # Enable caching
     mov eax, cr0
     and eax, 0x9FFFFFFF
     mov cr0, eax
-    
+
     # Hold this value here
     mov esi, 0x8F000
+    
+#ifdef BIOS1
+verify_tea:
+    jmp 0xFFFFD400
+#endif
+
+#ifdef BIOS0
+decode_arc4:
 
     # ARCFOUR KSA
     xor eax, eax
@@ -251,7 +260,7 @@ clear_mtr_loop:
     # Load our key
     xor edi, edi
     xor ebx, ebx
-    mov ebp, OFFSET key
+    mov ebp, OFFSET arc4_key
 
     arcfour_key_loop:
     mov al, byte ptr [ecx + ebp]
@@ -294,12 +303,12 @@ clear_mtr_loop:
     # Do a sanity check
     cmp dword ptr [0x95FE4], 0x7854794A
     jne error_handler
-
     jmp dword ptr [DECRYPTED_DATA_ADDR]
 
 # Decryption key
-key:
+arc4_key:
     .byte 0x27, 0x45, 0xA9, 0x10, 0x39, 0x7E, 0x6A, 0xA6, 0x86, 0xFB, 0x4B, 0x1A, 0x4B, 0xA9, 0x0F, 0xD2
+#endif
 
 # Global descriptor table
 gdt_table:
