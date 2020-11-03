@@ -35,10 +35,6 @@ text_start:
 #define TMP_REG16 dx
 #define TMP_REG8 dl
 
-# Addresses to hold our input/output for when we do encryption
-#define ENCRYPTED_DATA_ADDR 0xFFFF9E00
-#define DECRYPTED_DATA_ADDR 0x00090000
-
 # Result = *OP1 & 0x0FFFFFFF
 # I could forego doing the binary AND and save a few bytes, but it wouldn't functionally be the same
 read_memory:
@@ -235,17 +231,105 @@ enable_caching:
     and eax, 0x9FFFFFFF
     mov cr0, eax
 
-    # Hold this value here
+    # Hold this value here (used as basically a place to hold temporary values)
     mov esi, 0x8F000
-    
+
 #ifdef BIOS1
-verify_tea:
+# This actually runs encrypt() for TEA to verify that the BIOS is correct. This is NOT required to load anything - it is merely a verification.
+# See https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm
+#define TEA_INPUT 0xFFFFD400
+#define TEA_KEY 0xFFFFFC80
+
+tea_verify_begin:
+    mov ebp, TEA_INPUT
+    mov edi, TEA_KEY
+    xor ecx, ecx
+    mov dword ptr [esi + 0x1C], ecx
+    mov eax, ebp
+    mov ebx, edi
+    mov dword ptr [esi + 0x14], edi
+    mov dword ptr [esi + 0x18], esi
+
+# Initialize more values here
+tea_outer_loop:
+    mov edx, dword ptr [ebp]
+    mov esp, dword ptr [ebp + 0x4]
+    
+    mov dword ptr [esi], ecx # zero out the sum
+    mov dword ptr [esi + 0x4], eax
+    mov dword ptr [esi + 0x8], ebx
+    mov dword ptr [esi + 0xC], edx
+    mov dword ptr [esi + 0x10], esp
+    
+    # Set our counter to 32
+    mov cl, 0x20
+
+# Run TEA encryption (loop 32 times)
+tea_inner_loop:
+    # sum += delta (golden ratio)
+    add dword ptr [esi], 0x9E3779B9
+    
+    # v0
+    mov edx, ebx
+    mov esp, ebx
+    add edx, dword ptr [esi]
+    shl esp, 0x4
+    add esp, dword ptr [esi + 0x4]
+    xor edx, esp
+    mov esp, ebx
+    shr esp, 0x5
+    add esp, dword ptr [esi + 0x8]
+    xor edx, esp
+    add eax, edx
+    
+    # v1
+    mov edx, eax
+    mov esp, eax
+    add edx, dword ptr [esi]
+    shl esp, 0x4
+    add esp, dword ptr [esi + 0xC]
+    xor edx, esp
+    mov esp, eax
+    shr esp, 0x5
+    add esp, dword ptr [esi + 0x10]
+    xor edx, esp
+    add ebx, edx
+    
+    loop tea_inner_loop # this instruction is really cool~
+
+# Keep going...?
+tea_outer_loop_continued:
+    xchg dword ptr [esi + 0x14], eax
+    xchg dword ptr [esi + 0x18], ebx
+    add ebp, dword ptr [esi + 0x1C]
+    xor dword ptr [esi + 0x1C], 0x8
+    cmp ebp, edi
+    jb tea_outer_loop
+
+# Compare against the hash. If it matches, load into the BIOS.
+tea_verify:
+    add esi, 0xC
+    mov dword ptr [esi], eax
+    mov dword ptr [esi + 0x4], ebx
+    mov edi, OFFSET tea_hash
+    
+    # Nice little thing to compare several DWORDs with a couple instructions
+    mov cl, 4
+    rep cmpsd dword ptr [esi], dword ptr [edi]
+    jne error_handler
+    
+    # Done~
     jmp 0xFFFFD400
+    
+# This is the hash we expect (verifies it's correct)
+tea_hash:
+    .long 0xAF6740C7, 0xDAD52A5D, 0xC5D43293, 0x68BFF4E8
+    
 #endif
 
 #ifdef BIOS0
-decode_arc4:
 
+decode_arc4:
     # ARCFOUR KSA
     xor eax, eax
     xor ecx, ecx # set to 0 (we're going to let this underflow until we hit 0 again)
@@ -281,6 +365,10 @@ decode_arc4:
     xor edi, edi
     mov ebp, 0x6000
 
+    # Addresses to hold our input/output for when we do encryption
+    #define ARCFOUR_ENCRYPTED_DATA_ADDR 0xFFFF9E00
+    #define ARCFOUR_DECRYPTED_DATA_ADDR 0x00090000
+
     # Now actually decrypt
     # Encrypted is stored at 0xFFFF9E00
     # Decrypted is stored at 0x00090000 - this is where we're going to jump to
@@ -292,10 +380,10 @@ decode_arc4:
     mov byte ptr [esi + ecx], bl
     mov byte ptr [esi + edx], al
     add al, bl
-    mov bl, byte ptr [ENCRYPTED_DATA_ADDR + edi]
+    mov bl, byte ptr [ARCFOUR_ENCRYPTED_DATA_ADDR + edi]
     mov al, byte ptr [esi + eax]
     xor bl, al
-    mov byte ptr [DECRYPTED_DATA_ADDR + edi], bl
+    mov byte ptr [ARCFOUR_DECRYPTED_DATA_ADDR + edi], bl
     inc edi
     dec ebp
     jnz arcfour_decrypt_loop
@@ -303,7 +391,7 @@ decode_arc4:
     # Do a sanity check
     cmp dword ptr [0x95FE4], 0x7854794A
     jne error_handler
-    jmp dword ptr [DECRYPTED_DATA_ADDR]
+    jmp dword ptr [ARCFOUR_DECRYPTED_DATA_ADDR]
 
 # Decryption key
 arc4_key:
