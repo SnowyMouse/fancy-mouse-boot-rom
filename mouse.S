@@ -172,6 +172,9 @@ read_next_command:
     # First operand
     mov OP1_REG, dword ptr [CMD_REG + 1]
     
+    # Second operand
+    mov OP2_REG, dword ptr [CMD_REG + 5]
+    
     # Are we done?
     cmp OPC_REG8, 0xEE
     je finish_commands
@@ -200,9 +203,6 @@ execute_command:
     # Get the function pointer as an offset from 0xFFFFFE00.
     mov TMP_REG32, TEXT_START_ADDR
     mov TMP_REG8, byte ptr [opcodes_functions + OPC_REG32]
-    
-    # Second operand
-    mov OP2_REG, dword ptr [CMD_REG + 5]
 
     # Call it
     jmp TMP_REG32
