@@ -166,6 +166,7 @@ main32:
 # Load the opcode
 read_next_command:
     # Read the opcode
+    xor OPC_REG32, OPC_REG32
     mov OPC_REG8, byte ptr [CMD_REG]
     
     # Are we done?
@@ -193,9 +194,6 @@ execute_command_16_to_18:
     sub OPC_REG8, 6
 
 execute_command:
-    # Convert the 8-bit opcode to a 32-bit one
-    movsx OPC_REG32, OPC_REG8
-
     # Get the function pointer as an offset from 0xFFFFFE00.
     mov TMP_REG32, TEXT_START_ADDR
     mov TMP_REG8, byte ptr [opcodes_functions + OPC_REG32]
