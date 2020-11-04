@@ -260,11 +260,11 @@ tea_outer_loop:
     mov esi, dword ptr [ebp + 0x4]
     
     add sp, 0x14
-    push esi
-    push edx
-    push ebx
-    push eax
-    push ecx # zero out sum
+    push esi # esp + 0x10
+    push edx # esp + 0xC
+    push ebx # esp + 0x8
+    push eax # esp + 0x4
+    push ecx # esp + 0x0 - zero out sum
     
     # Set our counter to 32
     mov cl, 0x20
