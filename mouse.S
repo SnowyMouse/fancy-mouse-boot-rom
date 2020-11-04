@@ -128,19 +128,25 @@ and_then_or_scratch_reg:
 # Let's begin.
 main16:
     # First set up the GDT (this is 16-bit x86, so the bytecode has to be written out)
+    # o32 lgdt [cs:gdt_reference]
     .byte 0x66, 0x2E, 0x0F, 0x01, 0x16
     .short gdt_reference
 
     # There is code to set up the IDT, too, but it's not a valid IDT, so... uh... we don't need to do it
+    # o32 lidt [cs:gdt_reference]
     # .byte 0x66, 0x2E, 0x0F, 0x01, 0x1E
     # .short gdt_reference
 
     # Enable protected mode
+    # mov eax, cr0
+    # or al, 1
+    # mov cr0, eax
     .byte 0x0F, 0x20, 0xC0
     .byte 0x0C, 0x01
     .byte 0x0F, 0x22, 0xC0
 
     # Jump into main32
+    # mp dword 0x0008:main32
     .byte 0x66, 0xEA
     .long main32
     .byte 0x08, 0x00
