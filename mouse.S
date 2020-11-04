@@ -313,14 +313,14 @@ tea_outer_loop_continued:
 
 # Compare against the hash. If it matches, load into the BIOS.
 tea_verify:
-    add esp, 0xC
-    mov dword ptr [esp], eax
-    mov dword ptr [esp + 0x4], ebx
-    mov edi, OFFSET tea_hash
+    add esp, (0xC + 0x8)
+    push ebx
+    push eax
     
     # Nice little thing to compare several DWORDs with a couple instructions
     mov cl, 4
     mov esi, esp
+    mov edi, OFFSET tea_hash
     rep cmpsd dword ptr [esi], dword ptr [edi]
     jne error_handler
     
