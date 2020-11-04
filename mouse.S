@@ -257,7 +257,7 @@ tea_outer_loop:
     mov edx, dword ptr [ebp]
     mov esi, dword ptr [ebp + 0x4]
     
-    add sp, 0x14
+    add esp, 0x14
     push esi # esp + 0x10
     push edx # esp + 0xC
     push ebx # esp + 0x8
