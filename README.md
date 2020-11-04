@@ -12,7 +12,8 @@ This boot ROM accomplishes the following:
 - Enables protected mode
 - Enables 32-bit mode (since x86 starts in a backwards-compatible 16-bit mode)
 - Loads and interprets opcodes to initialize the console
-- Decodes and passes off to the Xbox's second-stage bootloader (<4817 kernels)
+- Decodes, verifies, and passes off to the Xbox's second-stage bootloader
+  (<4817 kernels)
 - Verifies and passes off to the BIOS (4817 or newer kernels)
 
 It does so with plenty of bytes to spare despite the 512 byte limitation!
