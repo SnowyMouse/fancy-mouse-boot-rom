@@ -235,8 +235,8 @@ enable_caching:
     and eax, 0x9FFFFFFF
     mov cr0, eax
 
-    # Hold this value here (used as basically a place to hold temporary values)
-    mov esi, 0x8F000
+    # Before we verify, set this
+    mov esp, 0x8F000
 
 #ifdef BIOS1
 # This actually runs encrypt() for TEA to verify that the BIOS is correct. This is NOT required to load anything - it is merely a verification.
@@ -248,22 +248,23 @@ tea_verify_begin:
     mov ebp, TEA_INPUT
     mov edi, TEA_KEY
     xor ecx, ecx
-    mov dword ptr [esi + 0x1C], ecx
+    mov dword ptr [esp + 0x1C], ecx
     mov eax, ebp
     mov ebx, edi
-    mov dword ptr [esi + 0x14], edi
-    mov dword ptr [esi + 0x18], esi
+    mov dword ptr [esp + 0x14], edi
+    mov dword ptr [esp + 0x18], esp
 
 # Initialize more values here
 tea_outer_loop:
     mov edx, dword ptr [ebp]
-    mov esp, dword ptr [ebp + 0x4]
+    mov esi, dword ptr [ebp + 0x4]
     
-    mov dword ptr [esi], ecx # zero out the sum
-    mov dword ptr [esi + 0x4], eax
-    mov dword ptr [esi + 0x8], ebx
-    mov dword ptr [esi + 0xC], edx
-    mov dword ptr [esi + 0x10], esp
+    add sp, 0x14
+    push esi
+    push edx
+    push ebx
+    push eax
+    push ecx # zero out sum
     
     # Set our counter to 32
     mov cl, 0x20
@@ -271,54 +272,55 @@ tea_outer_loop:
 # Run TEA encryption (loop 32 times)
 tea_inner_loop:
     # sum += delta (golden ratio)
-    add dword ptr [esi], 0x9E3779B9
+    add dword ptr [esp], 0x9E3779B9
     
     # v0
     mov edx, ebx
-    mov esp, ebx
-    add edx, dword ptr [esi]
-    shl esp, 0x4
-    add esp, dword ptr [esi + 0x4]
-    xor edx, esp
-    mov esp, ebx
-    shr esp, 0x5
-    add esp, dword ptr [esi + 0x8]
-    xor edx, esp
+    mov esi, ebx
+    add edx, dword ptr [esp]
+    shl esi, 0x4
+    add esi, dword ptr [esp + 0x4]
+    xor edx, esi
+    mov esi, ebx
+    shr esi, 0x5
+    add esi, dword ptr [esp + 0x8]
+    xor edx, esi
     add eax, edx
     
     # v1
     mov edx, eax
-    mov esp, eax
-    add edx, dword ptr [esi]
-    shl esp, 0x4
-    add esp, dword ptr [esi + 0xC]
-    xor edx, esp
-    mov esp, eax
-    shr esp, 0x5
-    add esp, dword ptr [esi + 0x10]
-    xor edx, esp
+    mov esi, eax
+    add edx, dword ptr [esp]
+    shl esi, 0x4
+    add esi, dword ptr [esp + 0xC]
+    xor edx, esi
+    mov esi, eax
+    shr esi, 0x5
+    add esi, dword ptr [esp + 0x10]
+    xor edx, esi
     add ebx, edx
     
     loop tea_inner_loop # this instruction is really cool~
 
 # Keep going...?
 tea_outer_loop_continued:
-    xchg dword ptr [esi + 0x14], eax
-    xchg dword ptr [esi + 0x18], ebx
-    add ebp, dword ptr [esi + 0x1C]
-    xor dword ptr [esi + 0x1C], 0x8
+    xchg dword ptr [esp + 0x14], eax
+    xchg dword ptr [esp + 0x18], ebx
+    add ebp, dword ptr [esp + 0x1C]
+    xor dword ptr [esp + 0x1C], 0x8
     cmp ebp, edi
     jb tea_outer_loop
 
 # Compare against the hash. If it matches, load into the BIOS.
 tea_verify:
-    add esi, 0xC
-    mov dword ptr [esi], eax
-    mov dword ptr [esi + 0x4], ebx
+    add esp, 0xC
+    mov dword ptr [esp], eax
+    mov dword ptr [esp + 0x4], ebx
     mov edi, OFFSET tea_hash
     
     # Nice little thing to compare several DWORDs with a couple instructions
     mov cl, 4
+    mov esi, esp
     rep cmpsd dword ptr [esi], dword ptr [edi]
     jne error_handler
     
@@ -337,7 +339,7 @@ decode_arc4:
     # ARCFOUR KSA
     xor eax, eax
     xor ecx, ecx # set to 0 (we're going to let this underflow until we hit 0 again)
-    mov edx, esi
+    mov edx, esp
     arcfour_key_schedule_loop:
     mov byte ptr [edx], al
     inc al
@@ -352,13 +354,13 @@ decode_arc4:
 
     arcfour_key_loop:
     mov al, byte ptr [ecx + ebp]
-    mov dl, byte ptr [edi + esi]
+    mov dl, byte ptr [edi + esp]
     add bl, al
     add bl, dl
-    mov al, byte ptr [ebx + esi]
-    mov byte ptr [edi + esi], al
+    mov al, byte ptr [ebx + esp]
+    mov byte ptr [edi + esp], al
     inc edi
-    mov byte ptr [ebx + esi], dl
+    mov byte ptr [ebx + esp], dl
     inc ecx
     and ecx, 0xF # prevent ecx from going above 0x10
     arcfour_key_loop_cmp:
@@ -378,14 +380,14 @@ decode_arc4:
     # Decrypted is stored at 0x00090000 - this is where we're going to jump to
     arcfour_decrypt_loop:
     inc cl
-    mov al, byte ptr [esi + ecx]
+    mov al, byte ptr [esp + ecx]
     add dl, al
-    mov bl, byte ptr [esi + edx]
-    mov byte ptr [esi + ecx], bl
-    mov byte ptr [esi + edx], al
+    mov bl, byte ptr [esp + edx]
+    mov byte ptr [esp + ecx], bl
+    mov byte ptr [esp + edx], al
     add al, bl
     mov bl, byte ptr [ARCFOUR_ENCRYPTED_DATA_ADDR + edi]
-    mov al, byte ptr [esi + eax]
+    mov al, byte ptr [esp + eax]
     xor bl, al
     mov byte ptr [ARCFOUR_DECRYPTED_DATA_ADDR + edi], bl
     inc edi
