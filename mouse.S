@@ -226,7 +226,7 @@ clear_mtr_loop:
     cmp cl, 0xF
     jna clear_mtr_loop
     mov cl, 0xFF
-    mov eax, ebx
+    mov eax, OP1_REG
     wrmsr
 
 enable_caching:
