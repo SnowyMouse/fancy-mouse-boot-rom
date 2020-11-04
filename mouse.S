@@ -161,7 +161,11 @@ main32:
     mov es, eax
 
     # Run commands from ROM
-    mov CMD_REG, 0xFF000080
+    mov CMD_REG, (0xFF000080 - 0x9)
+
+loop_command:
+    # Advance 9 bytes
+    add CMD_REG, 0x9
 
 # Load the opcode
 read_next_command:
@@ -206,12 +210,6 @@ execute_command:
 
     # Call it
     jmp TMP_REG32
-
-loop_command:
-    # Advance 9 bytes
-    add CMD_REG, 0x9
-
-    jmp read_next_command
 
 finish_commands:
     # Initialize MTRRs (0x200-0x20F)
@@ -300,7 +298,7 @@ tea_inner_loop:
     xor edx, esi
     add ebx, edx
     
-    loop tea_inner_loop # this instruction is really cool~
+    loop tea_inner_loop # do that 32 times
 
 # Keep going...?
 tea_outer_loop_continued:
@@ -317,7 +315,7 @@ tea_verify:
     push ebx
     push eax
     
-    # Nice little thing to compare several DWORDs with a couple instructions
+    ## Check hashes
     mov cl, 4
     mov esi, esp
     mov edi, OFFSET tea_hash
