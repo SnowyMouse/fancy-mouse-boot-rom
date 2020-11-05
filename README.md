@@ -67,16 +67,17 @@ We aren't an expert on law. However, there are a few things to note:
 
 - SnowyMouse: I wrote it!
 
-- Vaporeon: Testing, missing information.
+- Vaporeon: Testing, missing information~
 
-- Matt Borgerson: [Deconstructing the Xbox Boot ROM] was used in the creation of
-  this project. This actually made this project possible, since extracting a
-  real MCPX boot rom and then reverse engineering it was out of the scope of
-  what I can actually do.
+- Matt Borgerson: His "[Deconstructing the Xbox Boot ROM]" was used in the
+  creation of this project. This actually made this project possible, since
+  extracting a real MCPX boot rom and then reverse engineering it was out of the
+  scope and capabilities of what I can actually do.
 
-- The [Xemu] project: Extremely helpful so I can debug this with GDB.
+- The [Xemu] project: This was extremely helpful so I can debug this with GDB.
 
-- The [Xbox Dev Wiki]: Helpful for knowing what the rev1 MCPX does.
+- The [Xbox Dev Wiki]: This was helpful for knowing what the rev1 MCPX does.
 
 [Deconstructing the Xbox Boot ROM]: https://mborgerson.com/deconstructing-the-xbox-boot-rom/
 [Xemu]: https://xemu.app/
+[Xbox Dev Wiki]: https://xboxdevwiki.net/MCPX_ROM
