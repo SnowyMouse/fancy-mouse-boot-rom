@@ -401,9 +401,8 @@ arcfour_key_loop_begin:
     xor ebx, ebx
 
 arcfour_key_loop:
-    mov al, byte ptr [arc4_key + ecx]
     mov dl, byte ptr [edi + esp]
-    add bl, al
+    add bl, byte ptr [arc4_key + ecx]
     add bl, dl
     mov al, byte ptr [ebx + esp]
     mov byte ptr [edi + esp], al
@@ -438,8 +437,7 @@ arcfour_decrypt_loop:
     mov byte ptr [esp + edx], al
     add al, bl
     mov bl, byte ptr [ARCFOUR_ENCRYPTED_DATA_ADDR + edi]
-    mov al, byte ptr [esp + eax]
-    xor bl, al
+    xor bl, byte ptr [esp + eax]
     mov byte ptr [esi + edi], bl
     inc edi
     dec ebp
