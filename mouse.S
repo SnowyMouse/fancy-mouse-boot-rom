@@ -75,6 +75,8 @@ read_pci:
     in OPC_REG32, TMP_REG16
     mov RES_REG, OPC_REG32
 
+    jmp read_next_command
+
 # Binary AND result with OP1 and OR with OP2
 and_then_or:
     and RES_REG, OP1_REG
