@@ -42,12 +42,12 @@ text_start:
 read_memory:
     and OP1_REG, 0x0FFFFFFF # Basically limits ROM to reading first 16 MiB of VM
     mov RES_REG, dword ptr [OP1_REG]
-    jmp go_back_to_loop_command
+    jmp read_next_command
 
 # *OP1 = OP2
 write_memory:
     mov dword ptr [OP1_REG], OP2_REG
-    jmp go_back_to_loop_command
+    jmp read_next_command
 
 # Write to PCI space
 write_pci:
@@ -64,7 +64,7 @@ write_pci:
     mov OPC_REG32, OP2_REG
     out TMP_REG16, OPC_REG32
 
-    jmp go_back_to_loop_command
+    jmp read_next_command
 
 # Read from PCI space
 read_pci:
@@ -74,9 +74,6 @@ read_pci:
     add TMP_REG8, 4
     in OPC_REG32, TMP_REG16
     mov RES_REG, OPC_REG32
-
-go_back_to_loop_command:
-    jmp read_next_command
 
 # Binary AND result with OP1 and OR with OP2
 and_then_or:
