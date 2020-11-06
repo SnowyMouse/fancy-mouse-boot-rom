@@ -427,6 +427,7 @@ decode_arc4:
     # Now actually decrypt
     # Encrypted is stored at 0xFFFF9E00
     # Decrypted is stored at 0x00090000 - this is where we're going to jump to
+    mov esi, ARCFOUR_DECRYPTED_DATA_ADDR
     arcfour_decrypt_loop:
     inc cl
     mov al, byte ptr [esp + ecx]
@@ -438,7 +439,7 @@ decode_arc4:
     mov bl, byte ptr [ARCFOUR_ENCRYPTED_DATA_ADDR + edi]
     mov al, byte ptr [esp + eax]
     xor bl, al
-    mov byte ptr [ARCFOUR_DECRYPTED_DATA_ADDR + edi], bl
+    mov byte ptr [esi + edi], bl
     inc edi
     dec ebp
     jnz arcfour_decrypt_loop
@@ -446,7 +447,7 @@ decode_arc4:
     # Do a sanity check
     cmp dword ptr [0x95FE4], 0x7854794A
     jne error_handler
-    jmp dword ptr [ARCFOUR_DECRYPTED_DATA_ADDR]
+    jmp dword ptr [esi]
 
 # Decryption key
 arc4_key:
