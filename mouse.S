@@ -412,7 +412,7 @@ arcfour_key_loop:
     mov byte ptr [ebx + esp], dl
     inc ecx
     and ecx, 0xF # prevent ecx from going above 0x10
-    cmp edi, 0x100
+    cmp di, 0x100
     jb arcfour_key_loop
     
 arcfour_key_loop_done:
