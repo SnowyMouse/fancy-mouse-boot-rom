@@ -241,28 +241,26 @@ tea_verify_begin:
     # esi = h0
     # edi = h1
     
-    # [esp+0]  = h0 / incrementor
+    # [esp+0]  = TEA_END
     # [esp+4]  = h1
     # [esp+8]  = h2
     # [esp+12] = h3
-    # [esp+16] = TEA_END
-    # [esp+20] = k0
-    # [esp+24] = k1
-    # [esp+28] = k2
-    # [esp+32] = k3
+    # [esp+16] = k0
+    # [esp+20] = k1
+    # [esp+24] = k2
+    # [esp+28] = k3
     
     mov esi, TEA_START # h0 = TEA_START
     mov edi, TEA_END # h1 = TEA_END
     
     mov eax, esp # hold onto this (0x8F000) for h3
     
-    add esp, 20
+    add esp, 16
     xor ecx, ecx
-    push edi # TEA_END
     push eax # h3 = 0x8F000
     push edi # h2 = TEA_END
     push edi # h1 = TEA_END
-    push ecx # incrementer = 0
+    push edi # TEA_END
     
     # offset = TEA_START
     mov ebp, esi
@@ -272,14 +270,11 @@ tea_outer_loop:
     # sum = 0
     xor edx, edx
     
-    add esp, 36
+    add esp, 32
     push dword ptr [ebp + 4] # k3 = *(offset + 4)
     push dword ptr [ebp] # k2 = *offset
     push edi # k1 = h1
     push esi # k0 = h0
-    
-    # Loop 32 times
-    mov cl, 32
 
 # Run TEA encryption (loop 32 times)
 tea_inner_loop:
@@ -328,12 +323,13 @@ tea_inner_loop:
     xor eax, ebx
     add edi, eax
     
-    loop tea_inner_loop # do that 32 times
+    cmp dl, 0x20
+    jne tea_inner_loop # do that 32 times (edx % 0xFF = 0x20 after 32 times; funny coincidence)
 
 # Keep going...?
 tea_outer_loop_continued:
     # Go back
-    sub esp, 20
+    sub esp, 16
     
     # h2 <-> h0
     xchg dword ptr [esp+8], esi
@@ -342,15 +338,13 @@ tea_outer_loop_continued:
     xchg dword ptr [esp+12], edi
     
     # offset += increment
-    pop eax
-    add ebp, eax
+    add ebp, ecx
     
     # increment ^= 8
-    xor al, 0x8
-    push eax
+    xor ecx, 0x8
     
     # check if ebp < TEA_END is still true
-    cmp ebp, dword ptr [esp+16]
+    cmp ebp, dword ptr [esp]
     
     jb tea_outer_loop
 
