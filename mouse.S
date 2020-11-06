@@ -399,10 +399,9 @@ arcfour_key_loop_begin:
     # Load our key
     xor edi, edi
     xor ebx, ebx
-    mov ebp, OFFSET arc4_key
 
 arcfour_key_loop:
-    mov al, byte ptr [ecx + ebp]
+    mov al, byte ptr [arc4_key + ecx]
     mov dl, byte ptr [edi + esp]
     add bl, al
     add bl, dl
