@@ -28,7 +28,7 @@ text_start:
 #define SCR_REG ecx
 
 # Command pointer
-#define CMD_REG ebx
+#define CMD_REG esp
 
 # Temporary value register
 #define TMP_REG32 edx
@@ -76,13 +76,13 @@ read_pci:
     mov RES_REG, OPC_REG32
 
 go_back_to_loop_command:
-    jmp loop_command
+    jmp read_next_command
 
 # Binary AND result with OP1 and OR with OP2
 and_then_or:
     and RES_REG, OP1_REG
     or RES_REG, OP2_REG
-    jmp loop_command
+    jmp read_next_command
 
 # Shift the registers and then interpret the opcode
 # op1 --> opcode
@@ -102,28 +102,28 @@ branch_jne:
 jump_offset:
     add CMD_REG, OP2_REG
 done_jne:
-    jmp loop_command
+    jmp read_next_command
 
 # Read from I/O port
 write_io:
     mov TMP_REG32, OP1_REG
     mov OPC_REG32, OP2_REG
     out TMP_REG16, OPC_REG8
-    jmp loop_command
+    jmp read_next_command
 
 # Write to I/O port
 read_io:
     mov TMP_REG32, OP1_REG
     in OPC_REG8, TMP_REG16
     movsx RES_REG, OPC_REG8
-    jmp loop_command
+    jmp read_next_command
 
 # Same as "and then or" but with the scratch register, and we set the result to it
 and_then_or_scratch_reg:
     and SCR_REG, OP1_REG
     or SCR_REG, OP2_REG
     mov RES_REG, SCR_REG
-    jmp loop_command
+    jmp read_next_command
 
 # Let's begin.
 main16:
@@ -161,32 +161,27 @@ main32:
     mov es, eax
 
     # Run commands from ROM
-    mov CMD_REG, (0xFF000080 - 0x9)
-
-loop_command:
-    # Advance 9 bytes
-    add CMD_REG, 0x9
+    mov CMD_REG, 0xFF000080
 
 # Load the opcode
 read_next_command:
     # Read the opcode
     xor OPC_REG32, OPC_REG32
     mov OPC_REG8, byte ptr [CMD_REG]
+    inc CMD_REG
     
-    # First operand
-    mov OP1_REG, dword ptr [CMD_REG + 1]
-    
-    # Second operand
-    mov OP2_REG, dword ptr [CMD_REG + 5]
+    # First/second operand
+    pop OP1_REG
+    pop OP2_REG
     
     # Are we done?
     cmp OPC_REG8, 0xEE
     je finish_commands
 
 begin_execute_command:
-    # Greater than 18? Go to loop_command
+    # Greater than 18? Go to read_next_command
     cmp OPC_REG8, 18
-    ja loop_command
+    ja read_next_command
 
     # 0-9? Go to the thing
     cmp OPC_REG8, 9
@@ -196,8 +191,8 @@ begin_execute_command:
     cmp OPC_REG8, 16
     jae execute_command_16_to_18
 
-    # 10-15? Go to loop_command
-    jmp loop_command
+    # 10-15? Go to read_next_command
+    jmp read_next_command
 
 execute_command_16_to_18:
     # Subtract 6, since the first opcode is 16 and we want the 16th opcode to be the 10th index
@@ -487,8 +482,8 @@ entry_point:
 # Store the opcode's respective functions as 8-bit offsets from text_start, which is 0xFFFFFE00
 opcodes_functions:
     # 0-1
-    .byte (loop_command - text_start)
-    .byte (loop_command - text_start)
+    .byte (read_next_command - text_start)
+    .byte (read_next_command - text_start)
     
     # 2-9
     .byte (read_memory - text_start)
