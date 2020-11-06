@@ -367,7 +367,12 @@ tea_verify:
     mov esi, esp
     mov edi, OFFSET tea_hash
     rep cmpsd dword ptr [esi], dword ptr [edi]
+    
+    #ifdef BIOS0
+    jne decode_arc4
+    #else
     jne error_handler
+    #endif
     
     # Done~
     jmp 0xFFFFD400
