@@ -238,7 +238,7 @@ enable_caching:
 
 #ifdef BIOS1
 # This actually runs encrypt() for TEA to verify that the second stage bootloader is correct. This is NOT required to load anything - it is merely a verification.
-# See https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm
+# See https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm for information on the TEA algorithm (and why it's a BAD idea for hashing here)
 
 #define TEA_START 0xFFFFD400
 #define TEA_END 0xFFFFFC80
