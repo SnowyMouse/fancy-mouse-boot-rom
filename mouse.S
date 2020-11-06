@@ -237,20 +237,21 @@ enable_caching:
     mov esp, 0x8F000
 
 #ifdef BIOS1
-# This actually runs encrypt() for TEA to verify that the BIOS is correct. This is NOT required to load anything - it is merely a verification.
+# This actually runs encrypt() for TEA to verify that the second stage bootloader is correct. This is NOT required to load anything - it is merely a verification.
 # See https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm
-#define TEA_INPUT 0xFFFFD400
-#define TEA_KEY 0xFFFFFC80
+#define TEA_START 0xFFFFD400
+#define TEA_END 0xFFFFFC80
 
 tea_verify_begin:
-    mov ebp, TEA_INPUT
-    mov edi, TEA_KEY
+    mov ebp, TEA_START
+    mov edi, TEA_END
     xor ecx, ecx
-    mov dword ptr [esp + 0x1C], ecx
     mov eax, ebp
     mov ebx, edi
-    mov dword ptr [esp + 0x14], edi
+    
+    mov dword ptr [esp + 0x1C], ecx
     mov dword ptr [esp + 0x18], esp
+    mov dword ptr [esp + 0x14], edi
 
 # Initialize more values here
 tea_outer_loop:
@@ -258,10 +259,10 @@ tea_outer_loop:
     mov esi, dword ptr [ebp + 0x4]
     
     add esp, 0x14
-    push esi # esp + 0x10
-    push edx # esp + 0xC
-    push ebx # esp + 0x8
-    push eax # esp + 0x4
+    push esi # esp + 0x10 - k3
+    push edx # esp + 0xC - k2
+    push ebx # esp + 0x8 - k1
+    push eax # esp + 0x4 - k0
     push ecx # esp + 0x0 - zero out sum
     
     # Set our counter to 32
