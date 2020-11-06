@@ -346,7 +346,7 @@ tea_outer_loop_continued:
     add ebp, eax
     
     # increment ^= 8
-    xor eax, 0x8
+    xor al, 0x8
     push eax
     
     # check if ebp < TEA_END is still true
