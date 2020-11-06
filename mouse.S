@@ -406,17 +406,16 @@ arcfour_key_loop:
     add bl, dl
     mov al, byte ptr [esp + ebx]
     mov byte ptr [esp + edi], al
-    inc edi
     mov byte ptr [esp + ebx], dl
     inc ecx
     and ecx, 0xF # prevent ecx from going above 0x10
+    inc edi
     cmp di, 0x100
     jb arcfour_key_loop
     
 arcfour_key_loop_done:
     xor edx, edx
     xor edi, edi
-    mov ebp, 0x6000
 
     # Addresses to hold our input/output for when we do encryption
     #define ARCFOUR_ENCRYPTED_DATA_ADDR 0xFFFF9E00
@@ -440,8 +439,8 @@ arcfour_decrypt_loop:
     xor bl, byte ptr [esp + eax]
     mov byte ptr [esi + edi], bl
     inc edi
-    dec ebp
-    jnz arcfour_decrypt_loop
+    cmp di, 0x6000
+    jb arcfour_decrypt_loop
 
 arcfour_sanity_check:
     # Do a sanity check
