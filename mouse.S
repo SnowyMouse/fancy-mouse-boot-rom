@@ -401,13 +401,13 @@ arcfour_key_loop_begin:
     xor ebx, ebx
 
 arcfour_key_loop:
-    mov dl, byte ptr [edi + esp]
+    mov dl, byte ptr [esp + edi]
     add bl, byte ptr [arc4_key + ecx]
     add bl, dl
-    mov al, byte ptr [ebx + esp]
-    mov byte ptr [edi + esp], al
+    mov al, byte ptr [esp + ebx]
+    mov byte ptr [esp + edi], al
     inc edi
-    mov byte ptr [ebx + esp], dl
+    mov byte ptr [esp + ebx], dl
     inc ecx
     and ecx, 0xF # prevent ecx from going above 0x10
     cmp di, 0x100
