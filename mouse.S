@@ -9,8 +9,6 @@
 
 text_start:
 
-#define TEXT_START_ADDR 0xFFFFFE00
-
 # Operand 1 register
 #define OP1_REG edi
 
@@ -35,6 +33,10 @@ text_start:
 #define TMP_REG16 dx
 #define TMP_REG8 dl
 
+# Jump address register
+#define JMP_REG32 ebx
+#define JMP_REG8 bl
+
 # Result = *OP1 & 0x0FFFFFFF
 # I could forego doing the binary AND and save a few bytes, but it wouldn't functionally be the same
 read_memory:
@@ -55,7 +57,6 @@ write_pci:
     continue_write_pci:
 
     # Have to use the opcode register for this one since out only works with eax, and we don't have a stack
-    mov TMP_REG16, 0xCF8
     mov OPC_REG32, OP1_REG
     out TMP_REG16, OPC_REG32
 
@@ -68,7 +69,6 @@ write_pci:
 # Read from PCI space
 read_pci:
     mov OPC_REG32, OP1_REG
-    mov TMP_REG16, 0xCF8
     out TMP_REG16, OPC_REG32
 
     add TMP_REG8, 4
@@ -174,6 +174,9 @@ read_next_command:
     pop OP1_REG
     pop OP2_REG
     
+    # Hold this here
+    mov TMP_REG16, 0xCF8
+    
     # Are we done?
     cmp OPC_REG8, 0xEE
     je finish_commands
@@ -200,11 +203,11 @@ execute_command_16_to_18:
 
 execute_command:
     # Get the function pointer as an offset from 0xFFFFFE00.
-    mov TMP_REG32, TEXT_START_ADDR
-    mov TMP_REG8, byte ptr [opcodes_functions + OPC_REG32]
+    mov JMP_REG32, OFFSET text_start
+    mov JMP_REG8, byte ptr [opcodes_functions + OPC_REG32]
 
     # Call it
-    jmp TMP_REG32
+    jmp JMP_REG32
 
 finish_commands:
     # Initialize MTRRs (0x200-0x20F)
