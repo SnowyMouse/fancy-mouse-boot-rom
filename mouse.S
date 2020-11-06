@@ -249,12 +249,12 @@ tea_verify_begin:
     # esi = h0
     # edi = h1
     
-    # [esp+0]  = h0 / k0
+    # [esp+0]  = h0 / incrementor
     # [esp+4]  = h1
     # [esp+8]  = h2
     # [esp+12] = h3
     # [esp+16] = TEA_END
-    # [esp+20] = incrementer
+    # [esp+20] = k0
     # [esp+24] = k1
     # [esp+28] = k2
     # [esp+32] = k3
@@ -264,14 +264,13 @@ tea_verify_begin:
     
     mov eax, esp # hold onto this (0x8F000) for h3
     
-    add esp, 24
+    add esp, 20
     xor ecx, ecx
-    push ecx # incrementer = 0
     push edi # TEA_END
     push eax # h3 = 0x8F000
     push edi # h2 = TEA_END
     push edi # h1 = TEA_END
-    push esi # h0 = TEA_START
+    push ecx # incrementer = 0
     
     # offset = TEA_START
     mov ebp, esi
@@ -285,8 +284,8 @@ tea_outer_loop:
     push dword ptr [ebp + 4] # k3 = *(offset + 4)
     push dword ptr [ebp] # k2 = *offset
     push edi # k1 = h1
-    sub esp, 20
     push esi # k0 = h0
+    sub esp, 20
     
     # Loop 32 times
     mov cl, 32
@@ -303,7 +302,7 @@ tea_inner_loop:
     # ebx = ((h1 << 4) + k0)
     mov ebx, edi
     shl ebx, 4
-    add ebx, dword ptr [esp]
+    add ebx, dword ptr [esp+20]
     
     # eax = (h1 + sum) ^ ((h1 << 4) + k0)
     xor eax, ebx
@@ -349,10 +348,12 @@ tea_outer_loop_continued:
     xchg dword ptr [esp+12], edi
     
     # offset += increment
-    add ebp, dword ptr [esp+20]
+    pop eax
+    add ebp, eax
     
     # increment ^= 8
-    xor dword ptr [esp+20], 0x8
+    xor eax, 0x8
+    push eax
     
     # check if ebp < TEA_END is still true
     cmp ebp, dword ptr [esp+16]
