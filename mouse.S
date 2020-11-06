@@ -469,7 +469,7 @@ gdt_reference:
 
 # Error handling trap (failed sanity check - exception)
 error_handler:
-    jmp error_handler
+    int3
 
 # Reset vector (0xFFFFFFF0)
 # This is where execution starts. We have exactly 16 bytes to work with this section.
