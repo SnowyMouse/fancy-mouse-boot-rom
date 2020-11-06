@@ -127,29 +127,24 @@ and_then_or_scratch_reg:
 
 # Let's begin.
 main16:
+    .code16
     # First set up the GDT (this is 16-bit x86, so the bytecode has to be written out)
-    # o32 lgdt [cs:gdt_reference]
-    .byte 0x66, 0x2E, 0x0F, 0x01, 0x16
-    .short gdt_reference
+    lgdtd cs:gdt_reference
 
     # There is code to set up the IDT, too, but it's not a valid IDT, so... uh... we don't need to do it
-    # o32 lidt [cs:gdt_reference]
-    # .byte 0x66, 0x2E, 0x0F, 0x01, 0x1E
-    # .short gdt_reference
+    # lidtd cs:gdt_reference
 
     # Enable protected mode
-    # mov eax, cr0
-    # or al, 1
-    # mov cr0, eax
-    .byte 0x0F, 0x20, 0xC0
-    .byte 0x0C, 0x01
-    .byte 0x0F, 0x22, 0xC0
-
+    mov eax, cr0
+    or al, 1
+    mov cr0, eax
+    
     # Jump into main32
-    # mp dword 0x0008:main32
+    # jmp dword 0x0008:main32 - I have to write this out
     .byte 0x66, 0xEA
     .long main32
-    .byte 0x08, 0x00
+    .short 0x0008
+    .code32
 
 # Now we're in 32-bit mode
 main32:
@@ -477,11 +472,10 @@ error_handler:
 
 # This is our entry point.
 entry_point:
-    # 16-bit jmp to main
-    .byte 0xE9
-    .word (main16-(0xFFF0+3))
-
-
+    .code16
+    jmp main16
+    .code32
+    
 # Store the opcode's respective functions as 8-bit offsets from text_start, which is 0xFFFFFE00
 opcodes_functions:
     # 0-1
