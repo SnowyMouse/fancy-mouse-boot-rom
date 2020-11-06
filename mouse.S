@@ -285,7 +285,6 @@ tea_outer_loop:
     push dword ptr [ebp] # k2 = *offset
     push edi # k1 = h1
     push esi # k0 = h0
-    sub esp, 20
     
     # Loop 32 times
     mov cl, 32
@@ -302,7 +301,7 @@ tea_inner_loop:
     # ebx = ((h1 << 4) + k0)
     mov ebx, edi
     shl ebx, 4
-    add ebx, dword ptr [esp+20]
+    add ebx, dword ptr [esp]
     
     # eax = (h1 + sum) ^ ((h1 << 4) + k0)
     xor eax, ebx
@@ -310,7 +309,7 @@ tea_inner_loop:
     # ebx = ((h1 >> 5) + k1)
     mov ebx, edi
     shr ebx, 5
-    add ebx, dword ptr [esp+24]
+    add ebx, dword ptr [esp+4]
     
     # h0 += eax ^ ebx
     xor eax, ebx
@@ -323,7 +322,7 @@ tea_inner_loop:
     # ebx = ((h0 << 4) + k2)
     mov ebx, esi
     shl ebx, 4
-    add ebx, dword ptr [esp+28]
+    add ebx, dword ptr [esp+8]
     
     # eax = (h0 + sum) ^ ((h0 << 4) + k2)
     xor eax, ebx
@@ -331,7 +330,7 @@ tea_inner_loop:
     # ebx = ((h0 >> 5) + k3)
     mov ebx, esi
     shr ebx, 5
-    add ebx, dword ptr [esp+32]
+    add ebx, dword ptr [esp+12]
     
     # h1 += eax ^ ebx
     xor eax, ebx
@@ -341,6 +340,9 @@ tea_inner_loop:
 
 # Keep going...?
 tea_outer_loop_continued:
+    # Go back
+    sub esp, 20
+    
     # h2 <-> h0
     xchg dword ptr [esp+8], esi
     
