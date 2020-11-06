@@ -416,7 +416,6 @@ arcfour_key_loop:
     jb arcfour_key_loop
     
 arcfour_key_loop_done:
-    xor ecx, ecx
     xor edx, edx
     xor edi, edi
     mov ebp, 0x6000
