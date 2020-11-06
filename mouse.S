@@ -383,14 +383,14 @@ tea_hash:
 decode_arc4:
     # ARCFOUR KSA
     xor eax, eax
-    xor ecx, ecx # set to 0 (we're going to let this underflow until we hit 0 again)
     mov edx, esp
+    
+    # Initialize everything to FF -> FE -> FD, etc.
+    mov cl, 0xFF
     arcfour_key_schedule_loop:
-    mov byte ptr [edx], al
-    inc al
-    inc edx
-    dec cl
-    jnz arcfour_key_schedule_loop
+    dec al
+    mov byte ptr [ecx + edx], al
+    loop arcfour_key_schedule_loop
 
     # Load our key
     xor edi, edi
