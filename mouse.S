@@ -249,16 +249,15 @@ tea_verify_begin:
     # esi = h0
     # edi = h1
     
-    # [esp+0]  = h0
+    # [esp+0]  = h0 / k0
     # [esp+4]  = h1
     # [esp+8]  = h2
     # [esp+12] = h3
     # [esp+16] = TEA_END
     # [esp+20] = incrementer
-    # [esp+24] = k0
-    # [esp+28] = k1
-    # [esp+32] = k2
-    # [esp+36] = k3
+    # [esp+24] = k1
+    # [esp+28] = k2
+    # [esp+32] = k3
     
     mov esi, TEA_START # h0 = TEA_START
     mov edi, TEA_END # h1 = TEA_END
@@ -282,12 +281,12 @@ tea_outer_loop:
     # sum = 0
     xor edx, edx
     
-    add esp, 40
+    add esp, 36
     push dword ptr [ebp + 4] # k3 = *(offset + 4)
     push dword ptr [ebp] # k2 = *offset
     push edi # k1 = h1
+    sub esp, 20
     push esi # k0 = h0
-    sub esp, 24
     
     # Loop 32 times
     mov cl, 32
@@ -304,7 +303,7 @@ tea_inner_loop:
     # ebx = ((h1 << 4) + k0)
     mov ebx, edi
     shl ebx, 4
-    add ebx, dword ptr [esp+24]
+    add ebx, dword ptr [esp]
     
     # eax = (h1 + sum) ^ ((h1 << 4) + k0)
     xor eax, ebx
@@ -312,7 +311,7 @@ tea_inner_loop:
     # ebx = ((h1 >> 5) + k1)
     mov ebx, edi
     shr ebx, 5
-    add ebx, dword ptr [esp+28]
+    add ebx, dword ptr [esp+24]
     
     # h0 += eax ^ ebx
     xor eax, ebx
@@ -325,7 +324,7 @@ tea_inner_loop:
     # ebx = ((h0 << 4) + k2)
     mov ebx, esi
     shl ebx, 4
-    add ebx, dword ptr [esp+32]
+    add ebx, dword ptr [esp+28]
     
     # eax = (h0 + sum) ^ ((h0 << 4) + k2)
     xor eax, ebx
@@ -333,7 +332,7 @@ tea_inner_loop:
     # ebx = ((h0 >> 5) + k3)
     mov ebx, esi
     shr ebx, 5
-    add ebx, dword ptr [esp+36]
+    add ebx, dword ptr [esp+32]
     
     # h1 += eax ^ ebx
     xor eax, ebx
