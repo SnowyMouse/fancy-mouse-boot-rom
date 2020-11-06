@@ -239,84 +239,135 @@ enable_caching:
 #ifdef BIOS1
 # This actually runs encrypt() for TEA to verify that the second stage bootloader is correct. This is NOT required to load anything - it is merely a verification.
 # See https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm
+
 #define TEA_START 0xFFFFD400
 #define TEA_END 0xFFFFFC80
 
 tea_verify_begin:
-    mov ebp, TEA_START
-    mov edi, TEA_END
-    xor ecx, ecx
-    mov eax, ebp
-    mov ebx, edi
+    # ebp = offset
+    # ecx = i
+    # esi = h0
+    # edi = h1
     
-    mov dword ptr [esp + 0x1C], ecx
-    mov dword ptr [esp + 0x18], esp
-    mov dword ptr [esp + 0x14], edi
+    # [esp+0]  = h0
+    # [esp+4]  = h1
+    # [esp+8]  = h2
+    # [esp+12] = h3
+    # [esp+16] = TEA_END
+    # [esp+20] = incrementer
+    # [esp+24] = k0
+    # [esp+28] = k1
+    # [esp+32] = k2
+    # [esp+36] = k3
+    
+    mov esi, TEA_START # h0 = TEA_START
+    mov edi, TEA_END # h1 = TEA_END
+    
+    mov eax, esp # hold onto this (0x8F000) for h3
+    
+    add esp, 24
+    xor ecx, ecx
+    push ecx # incrementer = 0
+    push edi # TEA_END
+    push eax # h3 = 0x8F000
+    push edi # h2 = TEA_END
+    push edi # h1 = TEA_END
+    push esi # h0 = TEA_START
+    
+    # offset = TEA_START
+    mov ebp, esi
 
 # Initialize more values here
 tea_outer_loop:
-    mov edx, dword ptr [ebp]
-    mov esi, dword ptr [ebp + 0x4]
+    # sum = 0
+    xor edx, edx
     
-    add esp, 0x14
-    push esi # esp + 0x10 - k3
-    push edx # esp + 0xC - k2
-    push ebx # esp + 0x8 - k1
-    push eax # esp + 0x4 - k0
-    push ecx # esp + 0x0 - zero out sum
+    add esp, 40
+    push dword ptr [ebp + 4] # k3 = *(offset + 4)
+    push dword ptr [ebp] # k2 = *offset
+    push edi # k1 = h1
+    push esi # k0 = h0
+    sub esp, 24
     
-    # Set our counter to 32
-    mov cl, 0x20
+    # Loop 32 times
+    mov cl, 32
 
 # Run TEA encryption (loop 32 times)
 tea_inner_loop:
     # sum += delta (golden ratio)
-    add dword ptr [esp], 0x9E3779B9
+    add edx, 0x9E3779B9
     
-    # v0
-    mov edx, ebx
-    mov esi, ebx
-    add edx, dword ptr [esp]
-    shl esi, 0x4
-    add esi, dword ptr [esp + 0x4]
-    xor edx, esi
-    mov esi, ebx
-    shr esi, 0x5
-    add esi, dword ptr [esp + 0x8]
-    xor edx, esi
+    # eax = (h1 + sum)
+    mov eax, edi
     add eax, edx
     
-    # v1
-    mov edx, eax
-    mov esi, eax
-    add edx, dword ptr [esp]
-    shl esi, 0x4
-    add esi, dword ptr [esp + 0xC]
-    xor edx, esi
-    mov esi, eax
-    shr esi, 0x5
-    add esi, dword ptr [esp + 0x10]
-    xor edx, esi
-    add ebx, edx
+    # ebx = ((h1 << 4) + k0)
+    mov ebx, edi
+    shl ebx, 4
+    add ebx, dword ptr [esp+24]
+    
+    # eax = (h1 + sum) ^ ((h1 << 4) + k0)
+    xor eax, ebx
+    
+    # ebx = ((h1 >> 5) + k1)
+    mov ebx, edi
+    shr ebx, 5
+    add ebx, dword ptr [esp+28]
+    
+    # h0 += eax ^ ebx
+    xor eax, ebx
+    add esi, eax
+    
+    # eax = (h0 + sum)
+    mov eax, esi
+    add eax, edx
+    
+    # ebx = ((h0 << 4) + k2)
+    mov ebx, esi
+    shl ebx, 4
+    add ebx, dword ptr [esp+32]
+    
+    # eax = (h0 + sum) ^ ((h0 << 4) + k2)
+    xor eax, ebx
+    
+    # ebx = ((h0 >> 5) + k3)
+    mov ebx, esi
+    shr ebx, 5
+    add ebx, dword ptr [esp+36]
+    
+    # h1 += eax ^ ebx
+    xor eax, ebx
+    add edi, eax
     
     loop tea_inner_loop # do that 32 times
 
 # Keep going...?
 tea_outer_loop_continued:
-    xchg dword ptr [esp + 0x14], eax
-    xchg dword ptr [esp + 0x18], ebx
-    add ebp, dword ptr [esp + 0x1C]
-    xor dword ptr [esp + 0x1C], 0x8
-    cmp ebp, edi
+    # h2 <-> h0
+    xchg dword ptr [esp+8], esi
+    
+    # h3 <-> h1
+    xchg dword ptr [esp+12], edi
+    
+    # offset += increment
+    add ebp, dword ptr [esp+20]
+    
+    # increment ^= 8
+    xor dword ptr [esp+20], 0x8
+    
+    # check if ebp < TEA_END is still true
+    cmp ebp, dword ptr [esp+16]
+    
     jb tea_outer_loop
 
-# Compare against the hash. If it matches, load into the BIOS.
+# Compare against the hash. If it matches, load into the second stage bootloader
 tea_verify:
-    add esp, (0xC + 0x8)
-    push ebx
-    push eax
+    # Finish (set h0/h1 in esp)
+    add esp, 8
+    push edi
+    push esi
     
-    ## Check hashes
+    # Check hashes
     mov cl, 4
     mov esi, esp
     mov edi, OFFSET tea_hash
