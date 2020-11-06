@@ -395,6 +395,7 @@ arcfour_key_schedule_loop:
     mov byte ptr [ecx + edx], cl
     loop arcfour_key_schedule_loop
 
+arcfour_key_loop_begin:
     # Load our key
     xor edi, edi
     xor ebx, ebx
@@ -445,6 +446,7 @@ arcfour_decrypt_loop:
     dec ebp
     jnz arcfour_decrypt_loop
 
+arcfour_sanity_check:
     # Do a sanity check
     cmp dword ptr [0x95FE4], 0x7854794A
     jne error_handler
