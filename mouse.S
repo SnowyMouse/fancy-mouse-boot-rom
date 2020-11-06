@@ -374,7 +374,7 @@ tea_verify:
     #endif
     
     # Done~
-    jmp 0xFFFFD400
+    jmp TEA_START
     
 # This is the hash we expect (verifies it's correct)
 tea_hash:
