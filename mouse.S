@@ -387,7 +387,8 @@ decode_arc4:
     
     # Initialize everything to FF -> FE -> FD, etc.
     mov cl, 0xFF
-    arcfour_key_schedule_loop:
+    
+arcfour_key_schedule_loop:
     dec al
     mov byte ptr [ecx + edx], al
     loop arcfour_key_schedule_loop
@@ -397,7 +398,7 @@ decode_arc4:
     xor ebx, ebx
     mov ebp, OFFSET arc4_key
 
-    arcfour_key_loop:
+arcfour_key_loop:
     mov al, byte ptr [ecx + ebp]
     mov dl, byte ptr [edi + esp]
     add bl, al
@@ -408,9 +409,10 @@ decode_arc4:
     mov byte ptr [ebx + esp], dl
     inc ecx
     and ecx, 0xF # prevent ecx from going above 0x10
-    arcfour_key_loop_cmp:
     cmp edi, 0x100
-    jc arcfour_key_loop
+    jb arcfour_key_loop
+    
+arcfour_key_loop_done:
     xor ecx, ecx
     xor edx, edx
     xor edi, edi
@@ -420,11 +422,13 @@ decode_arc4:
     #define ARCFOUR_ENCRYPTED_DATA_ADDR 0xFFFF9E00
     #define ARCFOUR_DECRYPTED_DATA_ADDR 0x00090000
 
+    mov esi, ARCFOUR_DECRYPTED_DATA_ADDR
+    
+arcfour_decrypt_loop:
     # Now actually decrypt
     # Encrypted is stored at 0xFFFF9E00
     # Decrypted is stored at 0x00090000 - this is where we're going to jump to
-    mov esi, ARCFOUR_DECRYPTED_DATA_ADDR
-    arcfour_decrypt_loop:
+    
     inc cl
     mov al, byte ptr [esp + ecx]
     add dl, al
