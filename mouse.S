@@ -96,11 +96,11 @@ chain_command:
 # Do a jump if operand 1 != result
 branch_jne:
     cmp RES_REG, OP1_REG
-    je done_jne
+    je read_next_command
+    
 # Add operand 2 to the command pointer
 jump_offset:
     add CMD_REG, OP2_REG
-done_jne:
     jmp read_next_command
 
 # Read from I/O port
