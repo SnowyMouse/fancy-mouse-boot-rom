@@ -37,7 +37,7 @@ text_start:
 #define JMP_REG32 ebx
 #define JMP_REG8 bl
 
-# Result = *OP1 & 0x0FFFFFFF
+# Result = *(OP1 & 0x0FFFFFFF)
 # I could forego doing the binary AND and save a few bytes, but it wouldn't functionally be the same
 read_memory:
     and OP1_REG, 0x0FFFFFFF # Basically limits ROM to reading first 16 MiB of VM
