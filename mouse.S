@@ -408,6 +408,7 @@ arcfour_key_loop_done:
 
     # Addresses to hold our input/output for when we do encryption
     #define ARCFOUR_ENCRYPTED_DATA_ADDR 0xFFFF9E00
+    #define ARCFOUR_ENCRYPTED_DATA_SIZE (0xFFFFFE00 - 0xFFFF9E00)
     #define ARCFOUR_DECRYPTED_DATA_ADDR 0x00090000
 
     mov esi, ARCFOUR_DECRYPTED_DATA_ADDR
@@ -428,7 +429,7 @@ arcfour_encode_loop:
     xor bl, byte ptr [esp + eax]
     mov byte ptr [esi + edi], bl
     inc edi
-    cmp di, (text_start - ARCFOUR_ENCRYPTED_DATA_ADDR) # 0x6000
+    cmp di, ARCFOUR_ENCRYPTED_DATA_SIZE
     jb arcfour_encode_loop
 
 arcfour_sanity_check:
