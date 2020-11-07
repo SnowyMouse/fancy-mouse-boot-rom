@@ -427,7 +427,7 @@ arcfour_encode_loop:
     xor bl, byte ptr [esp + eax]
     mov byte ptr [esi + edi], bl
     inc edi
-    cmp di, 0x6000
+    cmp di, (text_start - ARCFOUR_ENCRYPTED_DATA_ADDR) # 0x6000
     jb arcfour_encode_loop
 
 arcfour_sanity_check:
