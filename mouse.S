@@ -379,14 +379,11 @@ tea_hash:
 #ifdef BIOS0
 
 decode_arc4:
-    # ARCFOUR KSA
-    mov edx, esp
-    
-    # Initialize everything to FF -> FE -> FD, etc.
+    # ARCFOUR KSA - Initialize everything to FF -> FE -> FD, etc.
     mov cl, 0xFF
     
 arcfour_key_schedule_loop:
-    mov byte ptr [ecx + edx], cl
+    mov byte ptr [esp + ecx], cl
     loop arcfour_key_schedule_loop
 
 arcfour_key_loop_begin:
