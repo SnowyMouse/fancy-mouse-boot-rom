@@ -386,17 +386,16 @@ arcfour_key_loop_begin:
     xor ebx, ebx
 
 arcfour_key_loop:
-    mov dl, byte ptr [esp + edi]
-    add bl, byte ptr [arc4_key + ecx]
+    mov dl, byte ptr [esp + ecx]
+    add bl, byte ptr [arc4_key + edi]
     add bl, dl
     mov al, byte ptr [esp + ebx]
-    mov byte ptr [esp + edi], al
+    mov byte ptr [esp + ecx], al
     mov byte ptr [esp + ebx], dl
-    inc ecx
-    and ecx, 0xF # prevent ecx from going above 0x10
     inc edi
-    cmp di, 0x100
-    jb arcfour_key_loop
+    and edi, 0xF # prevent ecx from going above 0x10
+    inc cl
+    jnz arcfour_key_loop # if cl rolls over to 0, jump!
     
 arcfour_key_loop_done:
     xor edx, edx
