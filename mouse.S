@@ -83,6 +83,12 @@ and_then_or:
     or RES_REG, OP2_REG
     jmp read_next_command
 
+# Same as "and then or" but with the scratch register)
+and_then_or_scratch_reg:
+    and SCR_REG, OP1_REG
+    or SCR_REG, OP2_REG
+    mov RES_REG, SCR_REG
+
 # Shift the registers and then interpret the opcode
 # op1 --> opcode
 # op2 --> op1
@@ -92,16 +98,6 @@ chain_command:
     mov OP1_REG, OP2_REG
     mov OP2_REG, RES_REG
     jmp begin_execute_command
-
-# Do a jump if operand 1 != result
-branch_jne:
-    cmp RES_REG, OP1_REG
-    je read_next_command
-    
-# Add operand 2 to the command pointer
-jump_offset:
-    add CMD_REG, OP2_REG
-    jmp read_next_command
 
 # Read from I/O port
 write_io:
@@ -115,13 +111,6 @@ read_io:
     mov TMP_REG32, OP1_REG
     in OPC_REG8, TMP_REG16
     movsx RES_REG, OPC_REG8
-    jmp read_next_command
-
-# Same as "and then or" but with the scratch register, and we set the result to it
-and_then_or_scratch_reg:
-    and SCR_REG, OP1_REG
-    or SCR_REG, OP2_REG
-    mov RES_REG, SCR_REG
     jmp read_next_command
 
 # Let's begin.
@@ -156,6 +145,15 @@ main32:
 
     # Run commands from ROM
     mov CMD_REG, 0xFF000080
+
+# Do a jump if operand 1 != result (effectively a no-op on startup since OP2_REG - esi - is 0, so it saves us from writing an extra jmp)
+branch_jne:
+    cmp RES_REG, OP1_REG
+    je read_next_command
+    
+# Add operand 2 to the command pointer
+jump_offset:
+    add CMD_REG, OP2_REG
 
 # Load the opcode
 read_next_command:
@@ -447,10 +445,6 @@ arc4_key:
 gdt_table:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x9B, 0xCF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x93, 0xCF, 0x00
 
-# Error handling trap (failed sanity check - exception)
-error_handler:
-    int3
-
 #ifdef BIOS1
 # This is the hash we expect (verifies it's correct)
 tea_hash:
@@ -495,3 +489,8 @@ opcodes_functions:
     .byte (and_then_or_scratch_reg - text_start)
     .byte (write_io - text_start)
     .byte (read_io - text_start)
+
+# You: Wait, the error handler is a lie?
+# Me: Always has been.
+error_handler:
+    
