@@ -251,6 +251,8 @@ tea_verify_begin:
     # [esp+20] = k1
     # [esp+24] = k2
     # [esp+28] = k3
+    # [esp+32] = tmph1
+    # [esp+36] = tmph2
     
     mov esi, TEA_START # h0 = TEA_START
     mov edi, TEA_END # h1 = TEA_END
@@ -283,6 +285,10 @@ tea_inner_loop:
     # sum += delta (golden ratio)
     add edx, 0x9E3779B9
     
+half_tea:
+    # Note that we're in the first half (0 when we're in the second)
+    xor ch, 1
+    
     # eax = (h1 + sum)
     mov eax, edi
     add eax, edx
@@ -300,30 +306,23 @@ tea_inner_loop:
     shr ebx, 5
     add ebx, dword ptr [esp+4]
     
-    # h0 += eax ^ ebx
+    # eax = eax ^ ebx
     xor eax, ebx
     add esi, eax
     
-    # eax = (h0 + sum)
-    mov eax, esi
-    add eax, edx
+    # Have h0/h1 swap places
+    xchg edi, esi
     
-    # ebx = ((h0 << 4) + k2)
-    mov ebx, esi
-    shl ebx, 4
-    add ebx, dword ptr [esp+8]
+    # Are we done?
+    test ch, ch
+    jz half_tea_done
     
-    # eax = (h0 + sum) ^ ((h0 << 4) + k2)
-    xor eax, ebx
+    # Guess not. Let's continue.
+    add esp, 8
+    jmp half_tea
     
-    # ebx = ((h0 >> 5) + k3)
-    mov ebx, esi
-    shr ebx, 5
-    add ebx, dword ptr [esp+12]
-    
-    # h1 += eax ^ ebx
-    xor eax, ebx
-    add edi, eax
+half_tea_done:
+    sub esp, 8
     
     cmp dl, 0x20
     jne tea_inner_loop # do that 32 times (edx % 0xFF = 0x20 after 32 times; funny coincidence)
