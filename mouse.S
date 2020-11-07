@@ -318,7 +318,8 @@ half_tea:
     jz half_tea_done
     
     # Guess not. Let's continue.
-    add esp, 8
+    pop eax # add esp, 8, but with one less byte required~
+    pop eax
     jmp half_tea
     
 half_tea_done:
@@ -352,7 +353,8 @@ tea_outer_loop_continued:
 # Compare against the hash. If it matches, load into the second stage bootloader
 tea_verify:
     # Finish (set h0/h1 in esp)
-    add esp, 8
+    pop eax # add esp, 8, but with one less byte required~
+    pop eax
     push edi
     push esi
     
