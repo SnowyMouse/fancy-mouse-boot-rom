@@ -401,7 +401,6 @@ arcfour_key_loop:
     
 arcfour_key_loop_done:
     xor edx, edx
-    xor edi, edi
     
     #ifdef BIOS1
     xor eax, eax
