@@ -125,8 +125,8 @@ and_then_or_scratch_reg:
     jmp read_next_command
 
 # Let's begin.
+.code16
 main16:
-    .code16
     # First set up the GDT (this is 16-bit x86, so the bytecode has to be written out)
     lgdtd cs:gdt_reference
 
@@ -143,9 +143,9 @@ main16:
     .byte 0x66, 0xEA
     .long main32
     .short 0x0008
-    .code32
 
 # Now we're in 32-bit mode
+.code32
 main32:
     # Set es, ds, and ss each to 0x10
     xor eax, eax
@@ -360,10 +360,24 @@ tea_verify:
     mov esi, esp
     mov edi, OFFSET tea_hash
     rep cmpsd dword ptr [esi], dword ptr [edi]
-    je TEA_START
+    
+    #ifdef BIOS0
+    jne decode_arc4
+    #else
+    jne error_handler
+    #endif
+    
+    # Done~
+    jmp TEA_START
+    
+# This is the hash we expect (verifies it's correct)
+tea_hash:
+    .long 0xAF6740C7, 0xDAD52A5D, 0xC5D43293, 0x68BFF4E8
+    
 #endif
 
 #ifdef BIOS0
+
 decode_arc4:
     # ARCFOUR KSA
     mov edx, esp
@@ -433,16 +447,6 @@ arc4_key:
     .byte 0x27, 0x45, 0xA9, 0x10, 0x39, 0x7E, 0x6A, 0xA6, 0x86, 0xFB, 0x4B, 0x1A, 0x4B, 0xA9, 0x0F, 0xD2
 #endif
 
-# Error handling trap (failed sanity check - exception)
-error_handler:
-    int3
-
-#ifdef BIOS1
-# This is the hash we expect (verifies it's correct)
-tea_hash:
-    .long 0xAF6740C7, 0xDAD52A5D, 0xC5D43293, 0x68BFF4E8
-#endif
-
 # Global descriptor table
 gdt_table:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x9B, 0xCF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x93, 0xCF, 0x00
@@ -455,15 +459,20 @@ gdt_reference:
     # Base
     .long gdt_table
 
+# Error handling trap (failed sanity check - exception)
+error_handler:
+    int3
+
 # Reset vector (0xFFFFFFF0)
 # This is where execution starts. We have exactly 16 bytes to work with this section.
 .section .reset_vector
 
 # This is our entry point.
+.code16
 entry_point:
-    .code16
     jmp main16
-    .code32
+    
+.code32
     
 # Store the opcode's respective functions as 8-bit offsets from text_start, which is 0xFFFFFE00
 opcodes_functions:
