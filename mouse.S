@@ -301,10 +301,12 @@ half_tea:
     # eax = (h1 + sum) ^ ((h1 << 4) + k0)
     xor eax, ebx
     
+    pop ebx # add 4 to esp
+    
     # ebx = ((h1 >> 5) + k1)
     mov ebx, edi
     shr ebx, 5
-    add ebx, dword ptr [esp+4]
+    add ebx, dword ptr [esp]
     
     # eax = eax ^ ebx
     xor eax, ebx
@@ -319,11 +321,10 @@ half_tea:
     
     # Guess not. Let's continue.
     pop eax # add esp, 8, but with one less byte required~
-    pop eax
     jmp half_tea
     
 half_tea_done:
-    sub esp, 8
+    sub esp, 12
     
     cmp dl, 0x20
     jne tea_inner_loop # do that 32 times (edx % 0xFF = 0x20 after 32 times; funny coincidence)
