@@ -280,7 +280,7 @@ tea_outer_loop:
     push edi # k1 = h1
     push esi # k0 = h0
 
-# Run TEA encryption (loop 32 times)
+# Run TEA encrypt() as a hash... what could possibly go wrong? (loop 32 times)
 tea_inner_loop:
     # sum += delta (golden ratio)
     add edx, 0x9E3779B9
