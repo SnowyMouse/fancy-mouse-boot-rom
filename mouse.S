@@ -365,19 +365,10 @@ tea_verify:
     mov edi, OFFSET tea_hash
     rep cmpsd dword ptr [esi], dword ptr [edi]
     
-    #ifdef BIOS0
-    jne decode_arc4
-    #else
-    jne error_handler
-    #endif
-    
     # Done~
-    jmp TEA_START
+    je TEA_START
     
-# This is the hash we expect (verifies it's correct)
-tea_hash:
-    .long 0xAF6740C7, 0xDAD52A5D, 0xC5D43293, 0x68BFF4E8
-    
+    # Fallthrough to error handler
 #endif
 
 #ifdef BIOS0
@@ -422,8 +413,8 @@ arcfour_key_loop_done:
 
     mov esi, ARCFOUR_DECRYPTED_DATA_ADDR
     
-arcfour_decrypt_loop:
-    # Now actually decrypt
+arcfour_encode_loop:
+    # Now actually decode the bootloader
     # Encrypted is stored at 0xFFFF9E00
     # Decrypted is stored at 0x00090000 - this is where we're going to jump to
     
@@ -439,7 +430,7 @@ arcfour_decrypt_loop:
     mov byte ptr [esi + edi], bl
     inc edi
     cmp di, 0x6000
-    jb arcfour_decrypt_loop
+    jb arcfour_encode_loop
 
 arcfour_sanity_check:
     # Do a sanity check
@@ -456,6 +447,16 @@ arc4_key:
 gdt_table:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x9B, 0xCF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x93, 0xCF, 0x00
 
+# Error handling trap (failed sanity check - exception)
+error_handler:
+    int3
+
+#ifdef BIOS1
+# This is the hash we expect (verifies it's correct)
+tea_hash:
+    .long 0xAF6740C7, 0xDAD52A5D, 0xC5D43293, 0x68BFF4E8
+#endif
+
 # Global descriptor reference
 gdt_reference:
     # Limit
@@ -463,10 +464,6 @@ gdt_reference:
 
     # Base
     .long gdt_table
-
-# Error handling trap (failed sanity check - exception)
-error_handler:
-    int3
 
 # Reset vector (0xFFFFFFF0)
 # This is where execution starts. We have exactly 16 bytes to work with this section.
