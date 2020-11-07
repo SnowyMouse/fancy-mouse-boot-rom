@@ -226,7 +226,11 @@ enable_caching:
     mov cr0, eax
 
     # Before we verify, set this
+    #ifdef BIOS1
+    mov esp, 0x8F010
+    #else
     mov esp, 0x8F000
+    #endif
 
 #ifdef BIOS1
 # This actually runs encrypt() for TEA to verify that the second stage bootloader is correct. This is NOT required to load anything - it is merely a verification.
@@ -253,9 +257,9 @@ tea_verify_begin:
     mov esi, TEA_START # h0 = TEA_START
     mov edi, TEA_END # h1 = TEA_END
     
-    mov eax, esp # hold onto this (0x8F000) for h3
+    mov eax, esp # hold onto this (0x8F010 - 0x10) for h3
+    xor al, al
     
-    add esp, 16
     xor ecx, ecx
     push eax # h3 = 0x8F000
     push edi # h2 = TEA_END
