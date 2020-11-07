@@ -374,8 +374,10 @@ tea_verify:
 
 decode_arc4:
     # ARCFOUR KSA - Initialize everything to FF -> FE -> FD, etc.
-    mov cl, 0xFF
     
+    #ifdef BIOS1
+    mov cl, 0xFF
+    #endif
 arcfour_key_schedule_loop:
     mov byte ptr [esp + ecx], cl
     loop arcfour_key_schedule_loop
