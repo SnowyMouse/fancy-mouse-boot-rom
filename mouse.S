@@ -160,7 +160,6 @@ main32:
 # Load the opcode
 read_next_command:
     # Read the opcode
-    xor OPC_REG32, OPC_REG32
     mov OPC_REG8, byte ptr [CMD_REG]
     inc CMD_REG
     
@@ -197,6 +196,7 @@ execute_command_16_to_18:
 
 execute_command:
     # Get the function pointer as an offset from 0xFFFFFE00.
+    and OPC_REG32, 0xFF
     mov JMP_REG32, OFFSET text_start
     mov JMP_REG8, byte ptr [opcodes_functions + OPC_REG32]
 
@@ -344,7 +344,7 @@ tea_outer_loop_continued:
     # offset += increment
     add ebp, ecx
     
-    # increment ^= 8
+    # increment ^= 8 - effectively add 8 only every other run to hash all 16 bytes
     xor ecx, 0x8
     
     # check if ebp < TEA_END is still true
@@ -411,6 +411,10 @@ arcfour_key_loop:
 arcfour_key_loop_done:
     xor edx, edx
     xor edi, edi
+    
+    #ifdef BIOS1
+    xor eax, eax
+    #endif
 
     # Addresses to hold our input/output for when we do encryption
     #define ARCFOUR_ENCRYPTED_DATA_ADDR 0xFFFF9E00
