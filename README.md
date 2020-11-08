@@ -30,8 +30,8 @@ and mouse_rev1_only.bin boots only newer BIOSes (4817+ kernels).
 Please note that modified BIOSes or BIOSes built with hacked or leaked source
 code are not supported. If any issues are experienced with such a BIOS, **you
 are on your own**. The verification processes done on this boot ROM are intended
-intended to match the verification processes done on the original boot ROMs for
-the sake of accuracy.
+to match the verification processes done on the original boot ROMs for the sake
+of accuracy.
 
 ## How do I compile this?
 
