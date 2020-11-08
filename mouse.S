@@ -194,7 +194,7 @@ execute_command_16_to_18:
 
 execute_command:
     # Get the function pointer as an offset from 0xFFFFFE00.
-    and OPC_REG32, 0xFF
+    movsx OPC_REG32, OPC_REG8
     mov JMP_REG32, OFFSET text_start
     mov JMP_REG8, byte ptr [opcodes_functions + OPC_REG32]
 
