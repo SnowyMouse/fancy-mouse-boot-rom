@@ -375,9 +375,11 @@ tea_verify:
 
 decode_arc4:
     # ARCFOUR KSA - Initialize everything to FF -> FE -> FD, etc.
-    
     #ifdef BIOS1
-    mov cl, 0xFF
+    pop eax # set the first byte at esp to 0 and clear eax in just four bytes!
+    xor eax, eax
+    push eax
+    mov cl, 0xFF # we only need to do this if we just went through the TEA thing, as ecx would otherwise still be set to 0xFF from clear_mtr_loop
     #endif
 arcfour_key_schedule_loop:
     mov byte ptr [esp + ecx], cl
@@ -402,10 +404,6 @@ arcfour_key_loop:
     
 arcfour_key_loop_done:
     xor edx, edx
-    
-    #ifdef BIOS1
-    xor eax, eax
-    #endif
 
     # Addresses to hold our input/output for when we do encryption
     #define ARCFOUR_ENCRYPTED_DATA_ADDR 0xFFFF9E00
