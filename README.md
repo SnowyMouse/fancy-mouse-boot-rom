@@ -24,8 +24,8 @@ The mouse.bin file should be able to boot all **original** Xbox BIOSes, but
 4817 or newer kernels (AKA "1.1+" kernels) are not very well tested due to a
 lack of current support in Xemu for debugging.
 
-If built from source, mouse_rev0.bin boots older BIOSes, and mouse_rev1.bin
-boots newer BIOSes.
+If built from source, mouse_rev0_only.bin boots older BIOSes (<4817 kernels),
+and mouse_rev1_only.bin boots only newer BIOSes (4817+ kernels).
 
 Please note that modified BIOSes or BIOSes built with hacked or leaked source
 code are not supported. If any issues are experienced with such a BIOS, **you
