@@ -311,7 +311,6 @@ half_tea:
     
     # Are we done?
     xor ch, 1
-    test ch, ch
     jz half_tea_done
     
     # Guess not. Let's continue.
