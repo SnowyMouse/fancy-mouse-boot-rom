@@ -225,7 +225,7 @@ enable_caching:
 
     # Before we verify, set this
     #ifdef BIOS1
-    mov esp, 0x8F010
+    mov esp, 0x8F00C
     #else
     mov esp, 0x8F000
     #endif
@@ -257,14 +257,12 @@ tea_verify_begin:
     mov esi, TEA_START # h0 = TEA_START
     mov edi, TEA_END # h1 = TEA_END
     
-    mov eax, esp # hold onto this (0x8F010 - 0x10) for h3
-    xor al, al
-    
     xor ecx, ecx
-    push eax # h3 = 0x8F000
     push edi # h2 = TEA_END
     push ecx # 0 (used later)
     push edi # TEA_END
+    
+    mov dword ptr [esp+0xC], esp
     
     # offset = TEA_START
     mov ebp, esi
