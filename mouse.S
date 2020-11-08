@@ -225,7 +225,7 @@ enable_caching:
 
     # Before we verify, set this
     #ifdef BIOS1
-    mov esp, 0x8F00C
+    mov esp, 0x8F010
     #else
     mov esp, 0x8F000
     #endif
@@ -258,11 +258,10 @@ tea_verify_begin:
     mov edi, TEA_END # h1 = TEA_END
     
     xor ecx, ecx
+    push esi # h3 = TEA_START (the original boot ROM did 0x8F000 - the stack pointer - so we'll get a different hash, but it isn't any less... or more secure. and it saves three bytes of space~)
     push edi # h2 = TEA_END
     push ecx # 0 (used later)
     push edi # TEA_END
-    
-    mov dword ptr [esp+0xC], esp
     
     # offset = TEA_START
     mov ebp, esi
@@ -448,7 +447,7 @@ gdt_table:
 #ifdef BIOS1
 # This is the hash we expect (verifies it's correct)
 tea_hash:
-    .long 0xAF6740C7, 0xDAD52A5D, 0xC5D43293, 0x68BFF4E8
+    .long 0xAF6740C7, 0xDAD52A5D, 0xC133D584, 0x7A56385C
 #endif
 
 # Global descriptor reference
