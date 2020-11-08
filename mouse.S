@@ -263,7 +263,7 @@ tea_verify_begin:
     xor ecx, ecx
     push eax # h3 = 0x8F000
     push edi # h2 = TEA_END
-    push edi # h1 = TEA_END
+    push ecx # 0 (used later)
     push edi # TEA_END
     
     # offset = TEA_START
@@ -320,7 +320,7 @@ half_tea:
     jz half_tea_done
     
     # Guess not. Let's continue.
-    pop eax # add esp, 8, but with one less byte required~
+    pop eax # add esp, 4
     jmp half_tea
     
 half_tea_done:
@@ -354,8 +354,8 @@ tea_outer_loop_continued:
 # Compare against the hash. If it matches, load into the second stage bootloader
 tea_verify:
     # Finish (set h0/h1 in esp)
-    pop eax # add esp, 8, but with one less byte required~
-    pop eax
+    pop eax # add esp, 8, but with two bytes
+    pop eax # this sets eax to 0 since we had this value set to 0 earlier
     push edi
     push esi
     
@@ -376,9 +376,7 @@ tea_verify:
 decode_arc4:
     # ARCFOUR KSA - Initialize everything to FF -> FE -> FD, etc.
     #ifdef BIOS1
-    pop eax # set the first byte at esp to 0 and clear eax in just four bytes!
-    xor eax, eax
-    push eax
+    mov byte ptr [esp], al # set the first byte to 0
     mov cl, 0xFF # we only need to do this if we just went through the TEA thing, as ecx would otherwise still be set to 0xFF from clear_mtr_loop
     #endif
 arcfour_key_schedule_loop:
