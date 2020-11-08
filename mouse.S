@@ -225,7 +225,7 @@ enable_caching:
 
     # Before we verify, set this
     #ifdef BIOS1
-    mov esp, 0x8F010
+    mov esp, 0x8F014
     #else
     mov esp, 0x8F000
     #endif
@@ -370,7 +370,6 @@ tea_verify:
 decode_arc4:
     # ARCFOUR KSA - Initialize everything to FF -> FE -> FD, etc.
     #ifdef BIOS1
-    pop esi
     push eax # set the first byte to 0 (mangled by the TEA thing)
     mov cl, 0xFF # we only need to do this if we just went through the TEA thing, as ecx would otherwise still be set to 0xFF from clear_mtr_loop
     #endif
