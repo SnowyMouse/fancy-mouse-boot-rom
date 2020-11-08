@@ -1,6 +1,6 @@
 # Fancy Mouse Boot ROM
 
-This boot rom can load an Xbox BIOS. It contains absolutely no code copyrighted
+This boot rom can boot an Xbox BIOS. It contains absolutely no code copyrighted
 by Microsoft, so you are free to distribute it. See LICENSE.txt for more
 information.
 
@@ -16,14 +16,22 @@ This boot ROM accomplishes the following:
   (<4817 kernels)
 - Verifies and passes off to the BIOS (4817 or newer kernels)
 
-It does so with plenty of bytes to spare despite the 512 byte limitation!
+And it manages to support all (original) BIOSes despite the 512 byte limitation!
 
-## Which file do I use?
+## Which kernels are the boot ROM compatible with?
 
-The version you use depends on the BIOS kernel:
+The mouse.bin file should be able to boot all **original** Xbox BIOSes, but
+4817 or newer kernels (AKA "1.1+" kernels) are not very well tested due to a
+lack of current support in Xemu for debugging.
 
-- If you are using a kernel revision prior to 4817, use mouse_rev0.bin
-- If you are using kernel revision 4817 or later, use mouse_rev1.bin
+If built from source, mouse_rev0.bin boots older BIOSes, and mouse_rev1.bin
+boots newer BIOSes.
+
+Please note that modified BIOSes or BIOSes built with hacked or leaked source
+code are not supported. If any issues are experienced with such a BIOS, **you
+are on your own**. The verification processes done on this boot ROM are intended
+intended to match the verification processes done on the original boot ROMs for
+the sake of accuracy.
 
 ## How do I compile this?
 
