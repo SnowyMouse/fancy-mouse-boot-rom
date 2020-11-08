@@ -203,10 +203,10 @@ execute_command:
 
 finish_commands:
     # Initialize MTRRs (0x200-0x20F)
-    mov ch, 2
     xor eax, eax
     xor ecx, ecx
     xor edx, edx
+    mov ch, 2
 
 clear_mtr_loop:
     wrmsr
@@ -355,7 +355,7 @@ tea_outer_loop_continued:
 tea_verify:
     # Finish (set h0/h1 in esp)
     pop eax # add esp, 8, but with two bytes
-    pop eax # this sets eax to 0 since we had this value set to 0 earlier
+    pop eax # this sets eax to 0 since we had the value at [esp+4] set to 0 earlier
     push edi
     push esi
     
