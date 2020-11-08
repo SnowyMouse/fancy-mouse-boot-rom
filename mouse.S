@@ -122,7 +122,7 @@ read_io:
 # Let's begin.
 .code16
 main16:
-    # First set up the GDT (this is 16-bit x86, so the bytecode has to be written out)
+    # First set up the GDT
     lgdtd cs:gdt_reference
 
     # There is code to set up the IDT, too, but it's not a valid IDT, so... uh... we don't need to do it
