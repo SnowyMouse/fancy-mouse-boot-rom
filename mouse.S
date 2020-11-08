@@ -243,8 +243,8 @@ tea_verify_begin:
     # esi = h0
     # edi = h1
     
-    # [esp+0]  = TEA_END
-    # [esp+4]  = h1
+    # [esp+0]  = TEA_END, h0
+    # [esp+4]  = 0, h1
     # [esp+8]  = h2
     # [esp+12] = h3
     # [esp+16] = k0
@@ -286,9 +286,6 @@ tea_inner_loop:
     add edx, 0x9E3779B9
     
 half_tea:
-    # Note that we're in the first half (0 when we're in the second)
-    xor ch, 1
-    
     # eax = (h1 + sum)
     mov eax, edi
     add eax, edx
@@ -316,6 +313,7 @@ half_tea:
     xchg edi, esi
     
     # Are we done?
+    xor ch, 1
     test ch, ch
     jz half_tea_done
     
