@@ -1,5 +1,11 @@
 # Fancy Mouse Boot ROM
 # Copyright (C) 2020 SnowyMouse
+#
+# Permission is hereby granted under the terms of version 2 of the GNU GPL to
+# use, modify, and.or redistribute this program, or, at your option, version 3
+# of the GNU GPL.
+#
+# See LICENSE.txt for more information.
 
 # Note we're using Intel syntax
 .intel_syntax noprefix
