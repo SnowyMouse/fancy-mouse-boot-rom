@@ -138,19 +138,7 @@ main16:
     .byte 0x66, 0xEA
     .long main32
     .short 0x0008
-
-# Now we're in 32-bit mode
 .code32
-main32:
-    # Set es, ds, and ss each to 0x10
-    xor eax, eax
-    mov al, 0x10
-    mov ds, eax
-    mov ss, eax
-    mov es, eax
-
-    # Run commands from ROM
-    mov CMD_REG, 0xFF000080
 
 # Do a jump if operand 1 != result (effectively a no-op on startup since OP2_REG - esi - is 0, so it saves us from writing an extra jmp)
 branch_jne:
@@ -390,7 +378,7 @@ arcfour_key_loop_begin:
 
 arcfour_key_loop:
     mov dl, byte ptr [esp + ecx]
-    add bl, byte ptr [arc4_key + edi]
+    add bl, byte ptr [arc4_key_0 + edi]
     add bl, dl
     mov al, byte ptr [esp + ebx]
     mov byte ptr [esp + ecx], al
@@ -434,25 +422,46 @@ arcfour_sanity_check:
     cmp dword ptr [0x95FE4], 0x7854794A
     jne error_handler
     jmp dword ptr [esi]
-
-# Decryption key
-arc4_key:
-    .byte 0x27, 0x45, 0xA9, 0x10, 0x39, 0x7E, 0x6A, 0xA6, 0x86, 0xFB, 0x4B, 0x1A, 0x4B, 0xA9, 0x0F, 0xD2
 #endif
 
-# Exception
+# We died!
 error_handler:
     int3
 
+# This is the hash we expect (verifies it's correct)
+tea_hash:
+    .long 0xAF6740C7, 0xDAD52A5D, 0xC133D584, 0x7A56385C
+
+# Keys, GDT, hashes, etc.
+.section .more_data
+
+#ifdef BIOS1
+arc4_key_1:
+    .byte 0xB4, 0x71, 0xEF, 0x97, 0x06, 0x5F, 0x49, 0x0A, 0xE0, 0xF7, 0x2A, 0xA2, 0xC7, 0x40, 0x67, 0xAF
+#endif
+#ifdef BIOS0
+arc4_key_0:
+    .byte 0x27, 0x45, 0xA9, 0x10, 0x39, 0x7E, 0x6A, 0xA6, 0x86, 0xFB, 0x4B, 0x1A, 0x4B, 0xA9, 0x0F, 0xD2
+#endif
+    
 # Global descriptor table
 gdt_table:
     .byte 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x9B, 0xCF, 0x00, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x93, 0xCF, 0x00
 
-#ifdef BIOS1
-# This is the hash we expect (verifies it's correct)
-tea_hash:
-    .long 0xAF6740C7, 0xDAD52A5D, 0xC133D584, 0x7A56385C
-#endif
+# Now we're in 32-bit mode
+main32:
+    # Set es, ds, and ss each to 0x10
+    xor eax, eax
+    mov al, 0x10
+    mov ds, eax
+    mov ss, eax
+    mov es, eax
+
+    # Run commands from ROM
+    mov CMD_REG, 0xFF000080
+    
+    # Begin
+    jmp read_next_command
 
 # Global descriptor reference
 gdt_reference:
@@ -470,7 +479,6 @@ gdt_reference:
 .code16
 entry_point:
     jmp main16
-    
 .code32
     
 # Store the opcode's respective functions as 8-bit offsets from text_start, which is 0xFFFFFE00
@@ -492,5 +500,3 @@ opcodes_functions:
     .byte (and_then_or_scratch_reg - text_start)
     .byte (write_io - text_start)
     .byte (read_io - text_start)
-
-    
