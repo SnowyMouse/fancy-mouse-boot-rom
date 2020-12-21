@@ -94,6 +94,7 @@ and_then_or_scratch_reg:
     and SCR_REG, OP1_REG
     or SCR_REG, OP2_REG
     mov RES_REG, SCR_REG
+    jmp read_next_command
 
 # Shift the registers and then interpret the opcode
 # op1 --> opcode
