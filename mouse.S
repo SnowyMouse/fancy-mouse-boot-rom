@@ -304,16 +304,14 @@ half_tea:
     # Have h0/h1 swap places
     xchg edi, esi
     
+    pop eax # add esp, 4
+    
     # Are we done?
     xor ch, 1
-    jz half_tea_done
-    
-    # Guess not. Let's continue.
-    pop eax # add esp, 4
-    jmp half_tea
+    jnz half_tea
     
 half_tea_done:
-    sub esp, 12
+    sub esp, 16
     
     cmp dl, 0x20
     jne tea_inner_loop # do that 32 times (edx % 0xFF = 0x20 after 32 times; funny coincidence)
