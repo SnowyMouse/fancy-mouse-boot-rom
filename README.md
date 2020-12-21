@@ -20,8 +20,8 @@ And it manages to support all (original) BIOSes despite the 512 byte limitation!
 
 ## Which kernels are the boot ROM compatible with?
 
-mouse_rev0_only.bin boots older BIOSes (<4817 kernels), and mouse_rev1_only.bin
-boots only newer BIOSes (4817+ kernels).
+mouse_rev0.bin boots older BIOSes (<4817 kernels), and mouse_rev1.bin boots only
+newer BIOSes (4817+ kernels).
 
 Please note that modified BIOSes or BIOSes built with hacked or leaked source
 code are not supported. If any issues are experienced with such a BIOS, **you
