@@ -350,7 +350,7 @@ tea_verify:
     mov cl, 4
     mov esi, esp
     mov edi, OFFSET tea_hash
-    rep cmpsd dword ptr [esi], dword ptr [edi]
+    rep cmpsd
     
     # Done~
     je TEA_START
