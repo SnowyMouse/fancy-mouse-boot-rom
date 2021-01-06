@@ -426,6 +426,7 @@ arcfour_sanity_check:
 # We died!
 error_handler_start:
     mov eax, 0x80000880
+    mov dx, 0xCF8
     jmp error_handler_finish
 
 # This is the hash we expect (verifies it's correct)
@@ -483,14 +484,6 @@ opcodes_functions:
     .byte (write_io - text_start)
     .byte (read_io - text_start)
 
-# Global descriptor reference
-gdt_reference:
-    # Limit
-    .short 0x0018
-
-    # Base
-    .long OFFSET gdt_table
-
 # Reset vector (0xFFFFFFF0)
 # This is where execution starts. We have exactly 16 bytes to work with this section.
 .section .reset_vector
@@ -501,12 +494,15 @@ entry_point:
     jmp main16
 .code32
 
-nop
-nop
+gdt_reference:
+    # Limit
+    .short 0x0018
+
+    # Base
+    .long OFFSET gdt_table
 
 # Disable the MCPX boot ROM and rollover to 0x00000000 (required for Cromwell to work)
 error_handler_finish:
-    mov dx, 0xCF8
     out dx, eax
     add dl, 0x4
     mov al, 0x2
