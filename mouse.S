@@ -123,10 +123,6 @@ read_io:
 # Let's begin.
 .code16
 main16:
-    nop
-    nop
-    nop
-
     # First set up the GDT
     lgdtd cs:gdt_reference
 
