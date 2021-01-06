@@ -123,6 +123,10 @@ read_io:
 # Let's begin.
 .code16
 main16:
+    nop
+    nop
+    nop
+
     # First set up the GDT
     lgdtd cs:gdt_reference
 
@@ -191,7 +195,7 @@ execute_command:
     # Get the function pointer as an offset from 0xFFFFFE00.
     movsx OPC_REG32, OPC_REG8
     mov JMP_REG32, OFFSET text_start
-    mov JMP_REG8, byte ptr [opcodes_functions + OPC_REG32]
+    mov JMP_REG8, byte ptr [OFFSET opcodes_functions + OPC_REG32]
 
     # Call it
     jmp JMP_REG32
@@ -419,13 +423,14 @@ arcfour_encode_loop:
 arcfour_sanity_check:
     # Do a sanity check
     cmp dword ptr [0x95FE4], 0x7854794A
-    jne error_handler
+    jne error_handler_start
     jmp dword ptr [esi]
 #endif
 
 # We died!
-error_handler:
-    int3
+error_handler_start:
+    mov eax, 0x80000880
+    jmp error_handler_finish
 
 # This is the hash we expect (verifies it's correct)
 tea_hash:
@@ -461,24 +466,6 @@ main32:
     
     # Begin
     jmp read_next_command
-
-# Global descriptor reference
-gdt_reference:
-    # Limit
-    .short 0x0018
-
-    # Base
-    .long gdt_table
-
-# Reset vector (0xFFFFFFF0)
-# This is where execution starts. We have exactly 16 bytes to work with this section.
-.section .reset_vector
-
-# This is our entry point.
-.code16
-entry_point:
-    jmp main16
-.code32
     
 # Store the opcode's respective functions as 8-bit offsets from text_start, which is 0xFFFFFE00
 opcodes_functions:
@@ -499,3 +486,32 @@ opcodes_functions:
     .byte (and_then_or_scratch_reg - text_start)
     .byte (write_io - text_start)
     .byte (read_io - text_start)
+
+# Global descriptor reference
+gdt_reference:
+    # Limit
+    .short 0x0018
+
+    # Base
+    .long OFFSET gdt_table
+
+# Reset vector (0xFFFFFFF0)
+# This is where execution starts. We have exactly 16 bytes to work with this section.
+.section .reset_vector
+
+# This is our entry point.
+.code16
+entry_point:
+    jmp main16
+.code32
+
+nop
+nop
+
+# Disable the MCPX boot ROM and rollover to 0x00000000 (required for Cromwell to work)
+error_handler_finish:
+    mov dx, 0xCF8
+    out dx, eax
+    add dl, 0x4
+    mov al, 0x2
+    out dx, al
