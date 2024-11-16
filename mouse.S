@@ -365,6 +365,11 @@ decode_arc4:
     #ifdef BIOS1
     push eax # set the first byte to 0 (mangled by the TEA thing)
     mov cl, 0xFF # we only need to do this if we just went through the TEA thing, as ecx would otherwise still be set to 0xFF from clear_mtr_loop
+    #else
+    pop eax
+    xor eax, eax
+    push eax
+    xor ch, ch
     #endif
 arcfour_key_schedule_loop:
     mov byte ptr [esp + ecx], cl
