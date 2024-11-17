@@ -1,8 +1,8 @@
 # Fancy Mouse Boot ROM
 
 This boot rom can boot an Xbox BIOS. It contains absolutely no code copyrighted
-by Microsoft, so you are free to distribute it. See LICENSE.txt for more
-information.
+by Microsoft, so you are free to distribute it under the terms of the GPL. See
+LICENSE.txt for more information.
 
 ## What does it do?
 
@@ -23,11 +23,18 @@ And it manages to support all (original) BIOSes despite the 512 byte limitation!
 mouse_rev0.bin boots older BIOSes (<4817 kernels), and mouse_rev1.bin boots only
 newer BIOSes (4817+ kernels).
 
-Please note that modified BIOSes or BIOSes built with hacked or leaked source
-code are not supported. If any issues are experienced with such a BIOS, **you
-are on your own**. The verification processes done on this boot ROM are intended
-to match the verification processes done on the original boot ROMs for the sake
-of accuracy.
+This boot ROM also support the free [Cromwell] BIOS.
+
+[Cromwell]: https://github.com/XboxDev/cromwell
+
+### Regarding hacked BIOSes (e.g. Complex, Xecutor, etc.)
+
+The verification processes on this boot ROM are intended to match verification
+done on **original** consoles for the sake of accuracy. As such, BIOSes built
+with leaked source code are not directly supported.
+
+If you encounter issues with these BIOSes, check to make sure the issues occur
+on an original BIOS dumped from a retail Xbox.
 
 ## How do I compile this?
 
@@ -55,33 +62,20 @@ $ make
 
 The resulting file will be called mouse.bin in the bin folder.
 
-## Can I use this legally?
+## Special thanks
 
-We aren't an expert on law. However, there are a few things to note:
+- [Vaporeon] : Testing, missing information
+- [Skryptonyte] : [Fixes](https://github.com/SnowyMouse/fancy-mouse-boot-rom/pull/3/commits/1996e66c4e73d279818173fac244d578f1e9b679)
+- [Matt Borgerson] : His "[Deconstructing the Xbox Boot ROM (Archived)]" was used
+  in the creation of this project. This actually made this project possible,
+  since extracting a real MCPX boot rom and then reverse engineering it was out
+  of the scope and capabilities of what I can actually do.
+- The [Xemu] project : This was extremely helpful so I can debug this with GDB.
+- The [Xbox Dev Wiki] : This was helpful for knowing what the rev1 MCPX does.
 
-- None of the code in here is copyrighted by Microsoft. The opcode interpreter
-  is written entirely from scratch. The ARCFOUR and TEA algorithms are not owned
-  by Microsoft, thus they cannot copyright them.
-
-- We have not agreed to any contractual agreement that states we cannot do this,
-  and you probably have not agreed to any contractual agreement that states you
-  cannot use this.
-
-## Credits
-
-- SnowyMouse: I wrote it!
-
-- Vaporeon: Testing, missing information~
-
-- Matt Borgerson: His "[Deconstructing the Xbox Boot ROM]" was used in the
-  creation of this project. This actually made this project possible, since
-  extracting a real MCPX boot rom and then reverse engineering it was out of the
-  scope and capabilities of what I can actually do.
-
-- The [Xemu] project: This was extremely helpful so I can debug this with GDB.
-
-- The [Xbox Dev Wiki]: This was helpful for knowing what the rev1 MCPX does.
-
-[Deconstructing the Xbox Boot ROM]: https://mborgerson.com/deconstructing-the-xbox-boot-rom/
+[Vaporeon]: https://github.com/Vaporeon
+[Skryptonyte]: https://github.com/Skryptonyte
+[Matt Borgerson]: https://github.com/mborgerson
+[Deconstructing the Xbox Boot ROM (Archived)]: https://web.archive.org/web/20201108132438/https://mborgerson.com/deconstructing-the-xbox-boot-rom/
 [Xemu]: https://xemu.app/
 [Xbox Dev Wiki]: https://xboxdevwiki.net/MCPX_ROM
